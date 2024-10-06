@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pen Plotter Control</title>
+    <style>
+        /* Estilo principal */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 6vw;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        canvas {
+            border: 2px solid #555;
+            background-color: white;
+            cursor: crosshair;
+            margin: 20px 0;
+            max-width: 90vw;
+            max-height: 60vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* Controles de movimiento */
+        .move-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .move-controls button {
+            width: 50px;
+            height: 50px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .move-controls .up { grid-column: 2; grid-row: 1; }
+        .move-controls .left { grid-column: 1; grid-row: 2; }
+        .move-controls .right { grid-column: 3; grid-row: 2; }
+        .move-controls .down { grid-column: 2; grid-row: 3; }
+
+        /* Botones de acción */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-buttons button, #closeModal {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        /* Ajustes responsive para pantallas medianas */
+        @media screen and (max-width: 768px) {
+            .move-controls button {
+                width: 40px;
+                height: 40px;
+                font-size: 14px;
+            }
+        }
+
+        /* Ajustes responsive para pantallas pequeñas */
+        @media screen and (max-width: 480px) {
+            canvas {
+                width: 90vw;
+                height: 50vh;
+            }
+
+            .container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            h1 {
+                font-size: 8vw;
+            }
+
+            .move-controls {
+                grid-template-columns: repeat(3, 40px);
+                grid-template-rows: repeat(3, 40px);
+            }
+
+            .move-controls button {
+                width: 40px;
+                height: 40px;
+                font-size: 12px;
+            }
+
+            .action-buttons button, #closeModal {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .modal-content {
+                font-size: 1.2rem;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Control del Pen Plotter</h1>
+    <canvas id="drawingCanvas" width="400" height="400"></canvas>
+    <div class="container">
+        <div class="move-controls">
+            <button id="upBtn" class="up">▲</button>
+            <button id="leftBtn" class="left">◀</button>
+            <button id="rightBtn" class="right">▶</button>
+            <button id="downBtn" class="down">▼</button>
+        </div>
+        <div class="action-buttons">
+            <button id="insertBtn">Insertar Imagen</button>
+            <button id="sendBtn">Enviar</button>
+            <button id="undoBtn">Deshacer</button>
+            <button id="clearBtn">Borrar</button>
+        </div>
+    </div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <p>Enviando Dibujo...</p>
+            <button id="closeModal">Cerrar</button>
+        </div>
+    </div>
+    <input type="file" id="imageLoader" accept="image/*" style="display: none;">
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const clearBtn = document.getElementById('clearBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const imageLoader = document.getElementById('imageLoader');
+        const modal = document.getElementById('modal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const insertBtn = document.getElementById('insertBtn');
+        const upBtn = document.getElementById('upBtn');
+        const downBtn = document.getElementById('downBtn');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+
+        let prevX = canvas.width / 2;
+        let prevY = canvas.height / 2;
+        let drawing = false;
+        let coordinates = [];
+        let img = null;
+
+        const imageStack = []; // Stack para almacenar el estado del lienzo
+
+        const socket = new WebSocket('ws://your-esp32-ip-address/ws');
+
+        socket.onopen = () => console.log("Conectado al servidor WebSocket.");
+        socket.onclose = () => console.log("Desconectado del servidor WebSocket.");
+
+        function saveCanvasState() {
+            imageStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        }
+
+        function undoLastAction() {
+            if (imageStack.length > 0) {
+                const lastImageData = imageStack.pop();
+                ctx.putImageData(lastImageData, 0, 0);
+            }
+        }
+
+        function startDrawing(event) {
+            drawing = true;
+            prevX = event.offsetX;
+            prevY = event.offsetY;
+            saveCanvasState(); // Guardar estado del canvas al iniciar dibujo
+        }
+
+        function stopDrawing() {
+            drawing = false;
+        }
+
+        function draw(event) {
+            if (!drawing) return;
+
+            const x = event.offsetX;
+            const y = event.offsetY;
+
+            ctx.beginPath();
+            ctx.moveTo(prevX, prevY);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+
+            coordinates.push({ x: x, y: y });
+            sendCoordinates(x, y);
+
+            prevX = x;
+            prevY = y;
+        }
+
+        function sendCoordinates(x, y) {
+            const data = { x: x, y: y };
+            socket.send(JSON.stringify(data));
+        }
+
+        sendBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+            socket.send(JSON.stringify({ drawing: coordinates }));
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            coordinates = [];
+            prevX = canvas.width / 2;
+            prevY = canvas.height / 2;
+            imageStack.length = 0; // Vaciar el stack de imágenes
+        });
+
+        insertBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            imageLoader.click(); // Abrir el input de imagen al hacer click en el botón
+        });
+
+        imageLoader.addEventListener('change', function (event) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                img = new Image();
+                img.onload = function () {
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(event.target.files[0]);
+        });
+
+        undoBtn.addEventListener('click', undoLastAction);
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        document.addEventListener('mouseup', stopDrawing);
+
+        canvas.addEventListener('touchstart', function(event) {
+            const touch = event.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            startDrawing({ offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top });
+        });
+
+        canvas.addEventListener('touchmove', function(event) {
+            const touch = event.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            draw({ offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top });
+        });
+
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function movePlotter(xOffset, yOffset) {
+            prevX += xOffset;
+            prevY += yOffset;
+
+            ctx.beginPath();
+            ctx.moveTo(prevX - xOffset, prevY - yOffset);
+            ctx.lineTo(prevX, prevY);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+
+            sendCoordinates(prevX, prevY);
+            saveCanvasState();
+        }
+
+        upBtn.addEventListener('click', () => movePlotter(0, -10));
+        downBtn.addEventListener('click', () => movePlotter(0, 10));
+        leftBtn.addEventListener('click', () => movePlotter(-10, 0));
+        rightBtn.addEventListener('click', () => movePlotter(10, 0));
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                stopDrawing();
+            }
+        });
+
+        window.addEventListener('focus', function () {
+            drawing = false;
+        });
+
+        canvas.addEventListener('mouseleave', stopDrawing);
+        document.addEventListener('mouseout', function (event) {
+            if (!event.relatedTarget || event.relatedTarget.nodeName === "HTML") {
+                stopDrawing();
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
