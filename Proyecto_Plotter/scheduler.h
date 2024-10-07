@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include <Ticker.h>
+#include "arm_controller.h"
+#include "web_server.h"
 
 void SCHEDULER_init();
 void SCHEDULER_dispatch_tasks();

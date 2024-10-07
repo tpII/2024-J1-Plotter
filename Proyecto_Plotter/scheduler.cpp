@@ -3,8 +3,9 @@
 Ticker msTicker;
 
 // Flags utilizadas por el scheduler
-volatile bool flag_print = false;
 volatile bool flag_LED = false;
+volatile bool flag_arm = false;
+volatile bool flag_wifi_server = false;
 
 // Funcion del TICK
 void onTick() 
@@ -14,12 +15,13 @@ void onTick()
 
   if (counter % 10 == 0) //cada 100ms
   {
-    flag_LED = 1;
+    flag_LED = true;
+    flag_arm = true;
+    flag_wifi_server = true;
   }
 
   if (counter > 100) //cada 1sec
   {
-    flag_print = true;
     counter = 0;
   }
 }
@@ -27,18 +29,21 @@ void onTick()
 void SCHEDULER_init()
 {
   pinMode(2, OUTPUT);  //Debugging
-   
   msTicker.attach(0.01, onTick);  // 10 ms
 }
 
 //Ejecuta funciones en funcion al estado de los flags
 void SCHEDULER_dispatch_tasks() 
 {
-  if (flag_print) 
+  if (flag_arm) 
   {
-    Serial.println("Flag: true");
-    flag_print = 0;
+    ARM_update();
   } 
+
+  if (flag_wifi_server)
+  {
+    WEB_SERVER_update();
+  }
 
   if (flag_LED)    
   {

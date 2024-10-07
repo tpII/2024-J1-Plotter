@@ -7,6 +7,8 @@ const char *password = "12345678";
 static String getPage();
 WebServer server(80);
 
+static bool server_initialized = false;
+
 static String getPage();
 
 void handleRoot() 
@@ -22,14 +24,18 @@ void WEB_SERVER_init()
   Serial.println(WiFi.softAPIP());
 
   server.on("/", handleRoot);
-
   server.begin();
+  server_initialized = true;
+
   Serial.println("Servidor inicializado");
 }
 
 void WEB_SERVER_update() 
 {
-  //server.handleClient();
+  if (server_initialized)
+  {
+    //server.handleClient();
+  }
 }
 
 static String getPage() 

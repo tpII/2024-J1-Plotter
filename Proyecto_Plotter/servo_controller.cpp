@@ -1,8 +1,12 @@
 #include "servo_controller.h"
 
-Servo servo_alpha;
-Servo servo_beta;
-Servo servo_vertical;
+#define SERVO_ALPHA_ID 0
+#define SERVO_BETA_ID 1
+#define SERVO_VERTICAL_ID 2
+
+static Servo servo_alpha;
+static Servo servo_beta;
+static Servo servo_vertical;
 
 //Constantes para evitar calculos repetitivos
 static const float constant_1 = (ARM_LENGTH_A*ARM_LENGTH_A)+(ARM_LENGTH_B*ARM_LENGTH_B);
@@ -13,6 +17,10 @@ static int angle_alpha = 0;
 static int angle_beta = 0;
 static int angle_vertical = 0;
 
+
+static void SERVO_setAngle(int servoID, int angle); //Setea el angulo del servo correspondiente 
+static void SERVO_update();
+
 void SERVO_init()
 {
   servo_alpha.attach(SERVO_ALPHA_PIN);
@@ -21,7 +29,7 @@ void SERVO_init()
 }
 
 //Setea el angulo del servo correspondiente 
-void SERVO_setAngle(int servoID, int angle)
+static void SERVO_setAngle(int servoID, int angle)
 {
   if (angle < 0) angle = 0;
   if (angle > 180) angle = 180;
@@ -42,10 +50,16 @@ void SERVO_setAngle(int servoID, int angle)
   }
 }
 
+static void SERVO_update()
+{
+  servo_alpha.write(angle_alpha);
+  servo_beta.write(angle_beta);
+  servo_vertical.write(angle_vertical);
+}
+
+
 void SERVO_moveto(int x_coord, int y_coord)
 {
-  //unsigned long time = micros(); //Tiempo de inicio
-
   //(X,Y) a coordenadas polares
   float R = sqrt( (float)(x_coord*x_coord) + (float)(y_coord*y_coord));
   float theta = atan((float)y_coord / (float)x_coord) * (to_degrees);
@@ -59,25 +73,20 @@ void SERVO_moveto(int x_coord, int y_coord)
   SERVO_setAngle(SERVO_ALPHA_ID, (int)alpha);
   SERVO_setAngle(SERVO_BETA_ID, (int)beta);
 
-  /*
-  //Debugging
-  time = micros() - time;
-  Serial.println("");
-  Serial.println("Coords (X,Y): (" + String(x_coord) + " , " + String(y_coord) + ")");
-  Serial.println("Polar (R,Theta): (" + String(R) + " , " + String(theta) + ")");
-  Serial.println("Angles (Alfa,Beta): ("+ String(alpha) + "," + String(beta) + ")");
-  Serial.println("Gamma: "+ String(gamma));
-  Serial.println("Time: "+ String(totalTime) + "us");
-  Serial.println("");
-  */
+  SERVO_update();
 }
 
-void SERVO_update()
+//Eleva o desciende el servo vertical
+void SERVO_lift(bool lifted)
 {
-  servo_alpha.write(angle_alpha);
-  servo_beta.write(angle_beta);
-  servo_vertical.write(angle_vertical);
+  if (lifted)
+    SERVO_setAngle(SERVO_VERTICAL_ID, 180);
+  else
+    SERVO_setAngle(SERVO_VERTICAL_ID, 0);
+
+  SERVO_update();
 }
+
 
 void SERVO_test()
 {
