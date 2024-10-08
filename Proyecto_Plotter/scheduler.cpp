@@ -15,13 +15,13 @@ void onTick()
 
   if (counter % 10 == 0) //cada 100ms
   {
-    flag_LED = true;
     flag_arm = true;
     flag_wifi_server = true;
   }
 
-  if (counter > 100) //cada 1sec
+  if (counter >= 100) //cada 1sec
   {
+    flag_LED = true;
     counter = 0;
   }
 }
@@ -47,11 +47,11 @@ void SCHEDULER_dispatch_tasks()
 
   if (flag_LED)    
   {
+    //Usado para testear que el timer funciona correctamente
     if (digitalRead(2))
       digitalWrite (2,LOW); 
     else
       digitalWrite (2,HIGH); 
-    
     flag_LED = 0;
   } 
      

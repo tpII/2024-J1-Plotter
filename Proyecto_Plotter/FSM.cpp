@@ -2,8 +2,8 @@
 
 void FSM_update();
 
-typedef enum {STATE_A, STATE_B} state_type;
-state_type state = STATE_A; 
+typedef enum {STANDBY, AUTO_DRAWING, MANUAL_CONTROL} state_type;
+state_type state = STANDBY; 
 
 static bool new_state = 1;         
 
@@ -11,7 +11,7 @@ void MEF_Update()
 {	
 	switch ( state )
 	{
-		case STATE_A:
+		case STANDBY:
 			if (new_state == 1)
 			{
             //Inicializa el estado
@@ -20,16 +20,24 @@ void MEF_Update()
       //Cambia el estado
       if (false)
       {
-        state = STATE_B;
+        state = AUTO_DRAWING;
         new_state = 1; 
       }
 
 		break;
 		
-		case STATE_B:
+		case AUTO_DRAWING:
       if (false)
       {
-        state = STATE_A;
+        state = STANDBY;
+        new_state = 1; 
+      }     
+		break;
+
+		case MANUAL_CONTROL:
+      if (false)
+      {
+        state = STANDBY;
         new_state = 1; 
       }     
 		break;

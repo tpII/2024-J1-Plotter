@@ -17,6 +17,6 @@ void SERVO_init();
 void SERVO_moveto(int x_coord, int y_coord); //Calcula los angulos alfa y beta para posicionar el extremo en (X,Y)
 void SERVO_lift(bool lifted); //Eleva o desciende el servo vertical
 
-void SERVO_test();
+void SERVO_test(); //Funcion Bloqueante para testear el funcionamiento de los tres servos
 
 #endif

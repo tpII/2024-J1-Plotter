@@ -57,9 +57,11 @@ static void SERVO_update()
   servo_vertical.write(angle_vertical);
 }
 
-
+//Calcula los angulos alfa y beta para posicionar el extremo en (X,Y)
 void SERVO_moveto(int x_coord, int y_coord)
 {
+  //unsigned long time = micros(); //Tiempo de inicio (debugging)
+
   //(X,Y) a coordenadas polares
   float R = sqrt( (float)(x_coord*x_coord) + (float)(y_coord*y_coord));
   float theta = atan((float)y_coord / (float)x_coord) * (to_degrees);
@@ -74,6 +76,18 @@ void SERVO_moveto(int x_coord, int y_coord)
   SERVO_setAngle(SERVO_BETA_ID, (int)beta);
 
   SERVO_update();
+
+  /*
+  //Debugging
+  time = micros() - time;
+  Serial.println("");
+  Serial.println("Coordenadas (X,Y): (" + String(x_coord) + " , " + String(y_coord) + ")");
+  //Serial.println("Coordenadas Polares (R,Theta): (" + String(R) + " , " + String(theta) + ")");
+  Serial.println("Angulos (Alfa,Beta): ("+ String(alpha) + "," + String(beta) + ")");
+  //Serial.println("Gamma: "+ String(gamma));
+  Serial.println("Tiempo de procesamiento: "+ String(time) + "us");
+  Serial.println("");*/
+  
 }
 
 //Eleva o desciende el servo vertical
@@ -87,7 +101,7 @@ void SERVO_lift(bool lifted)
   SERVO_update();
 }
 
-
+//Funcion Bloqueante para testear el funcionamiento de los tres servos
 void SERVO_test()
 {
   while (1)

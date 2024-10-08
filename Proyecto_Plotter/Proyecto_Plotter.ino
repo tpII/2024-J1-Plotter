@@ -15,8 +15,7 @@ void setup()
 void loop() 
 {
   //Testing 
-  //WEB_SERVER_update();
-  //SERVO_update();
+  //SERVO_test(); //Funcion Bloqueante para testear el funcionamiento de los tres servos
 
   SCHEDULER_dispatch_tasks();
 }
