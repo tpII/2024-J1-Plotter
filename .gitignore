@@ -1,0 +1,48 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+.venv/
+*.env
+.Python
+
+# Docker
+docker-compose.override.yml
+docker-compose.override.*.yml
+.env
+.env.*
+
+# VS Code y configuraciones de IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos compilados del RTOS (ESP32)
+rtos/build/
+rtos/sdkconfig
+rtos/.vscode/
+rtos/.espressif/
+
+# Archivos de GitHub Actions y secretos
+.github/secrets/
+.github/workflows/secrets/

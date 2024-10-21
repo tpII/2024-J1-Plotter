@@ -1,0 +1,28 @@
+name: RTOS CI
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Set up ESP32 Toolchain
+      run: |
+        docker pull espressif/idf:latest
+        docker run --rm -v ${{ github.workspace }}:/project espressif/idf:latest /bin/bash -c "cd /project/rtos && make all"
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: rtos-build
+        path: rtos/build/
