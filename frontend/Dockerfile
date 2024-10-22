@@ -13,5 +13,4 @@ COPY --from=builder /app /usr/share/nginx/html
 # Exponer el puerto 80 para nginx
 EXPOSE 80
 
-# Iniciar nginx en modo no demonizado
 CMD ["nginx", "-g", "daemon off;"]
