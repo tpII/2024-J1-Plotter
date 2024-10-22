@@ -14,5 +14,4 @@ COPY . .
 # Expone el puerto 5000 para Flask
 EXPOSE 5000
 
-# Comando para iniciar la aplicación Flask
 CMD ["python", "app.py"]
