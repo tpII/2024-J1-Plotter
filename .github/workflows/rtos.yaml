@@ -5,12 +5,12 @@ on:
     branches:
     - main
     paths:
-    - 'rtos/**' # Solo ejecuta si se modifica algo dentro de rtos/
+    - 'rtos/**'
   pull_request:
     branches:
     - main
     paths:
-    - 'rtos/**' # Solo ejecuta si el PR afecta archivos dentro de rtos/
+    - 'rtos/**'
 
 jobs:
   build:
@@ -20,13 +20,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Set Docker image tag based on commit SHA
+      id: get-sha
+      run: echo "::set-output name=sha_tag::$(git rev-parse --short HEAD)"
+
     - name: Set up ESP32 Toolchain
       run: |
         docker pull espressif/idf:latest
         docker run --rm -v ${{ github.workspace }}:/project espressif/idf:latest /bin/bash -c "cd /project/rtos && idf.py build"
 
-    - name: Build Docker image (optional, if needed)
-      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/plotter-rtos:latest ./rtos
-
-    - name: Push Docker image to DockerHub
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/plotter-rtos:latest
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: rtos-build-${{ steps.get-sha.outputs.sha_tag }}
+        path: rtos/build/
