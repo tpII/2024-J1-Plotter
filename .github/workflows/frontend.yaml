@@ -23,4 +23,4 @@ jobs:
       run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
     - name: Push Docker Image
-      run: docker push your-dockerhub-username/plotter-frontend:latest
+      run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/plotter-frontend:latest
