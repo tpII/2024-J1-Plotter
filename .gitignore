@@ -21,17 +21,6 @@ ENV/
 *.env
 .Python
 
-# Docker
-docker-compose.override.yml
-docker-compose.override.*.yml
-.env
-.env.*
-
-# VS Code y configuraciones de IDEs
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
 
 # Archivos del sistema operativo
 .DS_Store
@@ -46,3 +35,42 @@ rtos/.espressif/
 # Archivos de GitHub Actions y secretos
 .github/secrets/
 .github/workflows/secrets/
+
+# Ignore Terraform state files and directories
+**/.terraform/
+**/.terraform.lock.hcl
+
+# Ignore Terraform variable files containing sensitive information
+terraform.tfvars
+
+# Ignore Terraform crash logs
+crash.log
+
+# Ignore any local or backup files
+*.tfstate
+*.tfstate.backup
+*.log
+*.bak
+
+# Ignore SSH keys and other sensitive information
+*.pem
+*.key
+
+# Ignore Docker-specific files (if any)
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Ignore Python virtual environments (if any in backend or elsewhere)
+venv/
+.env/
+
+# Ignore IDE/editor config files and directories
+.vscode/
+.idea/
+*.swp
+*~
+
+# Ignore OS generated files (Mac/Linux/Windows)
+.DS_Store
+Thumbs.db
+
