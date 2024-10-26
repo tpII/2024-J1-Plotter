@@ -10,6 +10,12 @@ resource "aws_security_group" "app_sg" {
   }
 
   ingress {
+    from_port = 22
+    to_port = 22 
+    protocol = "tcp"
+  }
+
+  ingress {
     from_port   = 5000
     to_port     = 5000
     protocol    = "tcp"
@@ -25,12 +31,12 @@ resource "aws_security_group" "app_sg" {
 }
 
 resource "aws_eip" "frontend_eip" {
-  vpc      = true
+  vpc = true
   instance = aws_instance.frontend.id
 }
 
 resource "aws_eip" "backend_eip" {
-  vpc      = true
+  vpc = true
   instance = aws_instance.backend.id
 }
 

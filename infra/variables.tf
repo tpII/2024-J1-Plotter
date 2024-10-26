@@ -13,13 +13,13 @@ variable "instance_type" {
 variable "frontend_docker_image" {
   description = "DockerHub image for the frontend"
   type        = string
-  default     = "your-dockerhub-username/frontend:latest"
+  default     = "gianfrancolasala/plotter-frontend:latest"
 }
 
 variable "backend_docker_image" {
   description = "DockerHub image for the backend"
   type        = string
-  default     = "your-dockerhub-username/backend:latest"
+  default     = "gianfrancolasala/plotter-backend:latest"
 }
 
 variable "key_pair_name" {
