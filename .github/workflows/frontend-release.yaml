@@ -1,0 +1,29 @@
+name: Frontend Release CI/CD
+
+on:
+  push:
+    branches:
+    - 'release/v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Extract version from branch name
+      id: extract-version
+      run: |
+        VERSION=$(echo "${GITHUB_REF##*/}" | sed 's/^v//')
+        echo "::set-output name=version::${VERSION}"
+
+    - name: Build Docker image with version tag
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/plotter-frontend:${{ steps.extract-version.outputs.version }} ./frontend
+
+    - name: Login to DockerHub
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Push Docker image to DockerHub with version tag
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/plotter-frontend:${{ steps.extract-version.outputs.version }}
