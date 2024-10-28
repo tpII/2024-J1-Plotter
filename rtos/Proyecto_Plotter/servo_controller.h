@@ -10,13 +10,14 @@
 #define SERVO_VERTICAL_PIN 23
 
 //Longitud de cada brazo
-#define ARM_LENGTH_A 75 //Brazo conectado al servo alpha
-#define ARM_LENGTH_B 60 //Brazo conectado al servo beta
+#define ARM_LENGTH_A 90 //Brazo conectado al servo alpha
+#define ARM_LENGTH_B 90 //Brazo conectado al servo beta
 
 void SERVO_init(); 
 void SERVO_moveto(int x_coord, int y_coord); //Calcula los angulos alfa y beta para posicionar el extremo en (X,Y)
 void SERVO_lift(bool lifted); //Eleva o desciende el servo vertical
 
 void SERVO_test(); //Funcion Bloqueante para testear el funcionamiento de los tres servos
+void SERVO_calculate_range(); //Funcion usada para calcular e imprimir por consola los valores maximos y minimos de X para cada altura (rango de dibujo)
 
 #endif

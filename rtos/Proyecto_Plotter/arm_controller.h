@@ -6,8 +6,8 @@
 #include "servo_controller.h"
 
 // Coordenadas iniciales del brazo
-#define STARTING_X 50 
-#define STARTING_Y 50
+#define STARTING_X 90
+#define STARTING_Y 90
 
 // Ciclos del scheduler que espera el brazo a que se terminen de mover los servos
 #define WAIT_CYCLES 15

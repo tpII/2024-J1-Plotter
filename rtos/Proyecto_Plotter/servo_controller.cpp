@@ -61,10 +61,12 @@ static void SERVO_update()
 void SERVO_moveto(int x_coord, int y_coord)
 {
   //unsigned long time = micros(); //Tiempo de inicio (debugging)
+  if (x_coord == 0) x_coord = 1; //Evita dividir por 0
 
   //(X,Y) a coordenadas polares
   float R = sqrt( (float)(x_coord*x_coord) + (float)(y_coord*y_coord));
   float theta = atan((float)y_coord / (float)x_coord) * (to_degrees);
+  if (R > ARM_LENGTH_A + ARM_LENGTH_B) return; //Valor Invalido de coordenadas
 
   //Calcula los angulos necesarios
   float gamma = acos((float)(constant_1-(R*R)) / constant_2);
@@ -79,13 +81,13 @@ void SERVO_moveto(int x_coord, int y_coord)
 
   /*
   //Debugging
-  time = micros() - time;
+  //time = micros() - time;
   Serial.println("");
   Serial.println("Coordenadas (X,Y): (" + String(x_coord) + " , " + String(y_coord) + ")");
   //Serial.println("Coordenadas Polares (R,Theta): (" + String(R) + " , " + String(theta) + ")");
   Serial.println("Angulos (Alfa,Beta): ("+ String(alpha) + "," + String(beta) + ")");
   //Serial.println("Gamma: "+ String(gamma));
-  Serial.println("Tiempo de procesamiento: "+ String(time) + "us");
+  //Serial.println("Tiempo de procesamiento: "+ String(time) + "us");
   Serial.println("");*/
   
 }
@@ -124,4 +126,85 @@ void SERVO_test()
     Serial.println("Pos: 180");
     delay(1500);
   }
+}
+
+//Funcion usada para calcular los valores maximos y minimos de X para cada altura (rango de dibujo)
+void SERVO_calculate_range()
+{
+  float R, theta, gamma, alpha, beta;
+
+  int pos_y = 90;
+  int pos_x = 90;
+  bool negative_found = false;
+
+  int min_x = 90;
+  int max_x = 90;
+  bool min_x_found, max_x_found;
+
+  for (int y = 90; y > -90; y--) // For each height
+  {
+    pos_y = y;  
+    pos_x = 90; // Reset X position and min/max values
+    min_x = 90; 
+    max_x = 90;
+    min_x_found = false;
+    max_x_found = false;
+
+    // Calculate min_x
+    negative_found = false;
+    while (!negative_found)
+    {
+      pos_x--;
+      R = sqrt((float)(pos_x * pos_x) + (float)(pos_y * pos_y));
+
+      if (R > ARM_LENGTH_A + ARM_LENGTH_B || pos_x <= 0) {
+        negative_found = true;
+        break;
+      }
+
+      theta = atan((float)pos_y / (float)pos_x) * to_degrees;
+      gamma = acos((float)(constant_1 - (R * R)) / constant_2);
+      alpha = (asin(sin(gamma) * ARM_LENGTH_B / R) * to_degrees) + theta;
+      beta = 180 - alpha - (gamma * to_degrees);
+
+      if ((alpha >= 0 && beta >= 0) && (alpha <= 180 && beta <= 180)) {
+        min_x = pos_x; // Update minimum X
+        min_x_found = true;
+      }
+      else
+        negative_found = true;
+    }
+
+    // Calculate max_x
+    pos_x = 90;
+    negative_found = false;
+    while (!negative_found)
+    {
+      pos_x++;
+      R = sqrt((float)(pos_x * pos_x) + (float)(pos_y * pos_y));
+
+      if (R > ARM_LENGTH_A + ARM_LENGTH_B) {
+        negative_found = true;
+        break;
+      }
+
+      theta = atan((float)pos_y / (float)pos_x) * to_degrees;
+      gamma = acos((float)(constant_1 - (R * R)) / constant_2);
+      alpha = (asin(sin(gamma) * ARM_LENGTH_B / R) * to_degrees) + theta;
+      beta = 180 - alpha - (gamma * to_degrees);
+
+      if ((alpha >= 0 && beta >= 0) && (alpha <= 180 && beta <= 180)) {
+        max_x = pos_x; // Update maximum X
+        max_x_found = true;
+      }
+      else
+        negative_found = true;
+    }
+
+    if (min_x_found && max_x_found)
+      Serial.println("Altura (" + String((int)pos_y) + "): Min X: (" + String((int)min_x) + "), Max X: (" + String((int)max_x) + ")");
+    else
+      Serial.println("Altura (" + String((int)pos_y) + "): No valid range for X");
+  }
+  Serial.println("TEST FINALIZADO");
 }
