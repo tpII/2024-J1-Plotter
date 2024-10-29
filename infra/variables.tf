@@ -1,34 +1,23 @@
-variable "aws_region" {
-  description = "The AWS region to deploy resources"
+variable "s3_bucket_name" {
+  description = "Unique name for the S3 bucket"
   type        = string
-  default     = "us-east-1"
+  default     = "canvas-app-bucket-1234"
 }
 
-variable "instance_type" {
-  description = "EC2 instance type"
+variable "dynamodb_table_name" {
+  description = "DynamoDB table name for storing drawing data"
   type        = string
-  default     = "t2.micro"
+  default     = "DrawingData"
 }
 
-variable "frontend_docker_image" {
-  description = "DockerHub image for the frontend"
+variable "s3_bucket" {
+  description = "S3 bucket where Lambda code is stored"
   type        = string
-  default     = "gianfrancolasala/plotter-frontend:latest"
+  default     = "lambda-code-bucket"
 }
 
-variable "backend_docker_image" {
-  description = "DockerHub image for the backend"
+variable "s3_key" {
+  description = "S3 key for the Lambda code zip file"
   type        = string
-  default     = "gianfrancolasala/plotter-backend:latest"
-}
-
-variable "key_pair_name" {
-  description = "Name of the AWS key pair to access EC2 instances"
-  type        = string
-}
-
-variable "security_group_name" {
-  description = "Security group name for the app"
-  type        = string
-  default     = "fullstack-app-sg"
+  default     = "process_drawing.zip"
 }
