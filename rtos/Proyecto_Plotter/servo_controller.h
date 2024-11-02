@@ -10,8 +10,8 @@
 #define SERVO_VERTICAL_PIN 23
 
 //Longitud de cada brazo
-#define ARM_LENGTH_A 90 //Brazo conectado al servo alpha
-#define ARM_LENGTH_B 90 //Brazo conectado al servo beta
+#define ARM_LENGTH_A 900 //Brazo conectado al servo alpha
+#define ARM_LENGTH_B 900 //Brazo conectado al servo beta
 
 void SERVO_init(); 
 void SERVO_moveto(int x_coord, int y_coord); //Calcula los angulos alfa y beta para posicionar el extremo en (X,Y)

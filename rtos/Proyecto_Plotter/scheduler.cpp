@@ -6,6 +6,7 @@ Ticker msTicker;
 volatile bool flag_LED = false;
 volatile bool flag_arm = false;
 volatile bool flag_wifi_server = false;
+volatile bool flag_joystick = false;
 
 // Funcion del TICK
 void onTick() 
@@ -13,10 +14,12 @@ void onTick()
   static uint8_t counter = 0;
   counter++;
 
+  flag_arm = true; //cada 10ms
+
   if (counter % 10 == 0) //cada 100ms
   {
-    flag_arm = true;
     flag_wifi_server = true;
+    flag_joystick = true;
   }
 
   if (counter >= 100) //cada 1sec
@@ -43,6 +46,11 @@ void SCHEDULER_dispatch_tasks()
   if (flag_wifi_server)
   {
     WEB_SERVER_update();
+  }
+
+  if (flag_joystick)
+  {
+    JOYSTICK_update();
   }
 
   if (flag_LED)    

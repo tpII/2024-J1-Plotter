@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <Ticker.h>
 #include "arm_controller.h"
+#include "joystick_controller.h"
 #include "web_server.h"
 
 void SCHEDULER_init();

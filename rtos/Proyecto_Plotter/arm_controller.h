@@ -5,12 +5,22 @@
 
 #include "servo_controller.h"
 
+//Valores maximos y minimos de coordenadas que puede alcanzar el lapiz
+//Usados para abstraer los limites del area de dibujo
+#define MIN_X 450
+#define MAX_X 1350
+#define MIN_Y -750
+#define MAX_Y 750
+#define RANGE_Y (MAX_Y-MIN_Y)
+#define RANGE_X (MAX_X-MIN_X)
+
 // Coordenadas iniciales del brazo
-#define STARTING_X 90
-#define STARTING_Y 90
+#define STARTING_X RANGE_X-MIN_X
+#define STARTING_Y RANGE_Y
+
 
 // Ciclos del scheduler que espera el brazo a que se terminen de mover los servos
-#define WAIT_CYCLES 15
+#define WAIT_CYCLES 2
 
 void ARM_init();
 void ARM_update(); //Actualiza la posicion del brazo si su posicion actual no es la deseada, y espera a que se muevan los servos.
