@@ -2,22 +2,20 @@
 #define _ARM_CONTROLLER_H_
 
 // Controlador del brazo mecanico (controlador de movimiento)
-
 #include "servo_controller.h"
 
 //Valores maximos y minimos de coordenadas que puede alcanzar el lapiz
 //Usados para abstraer los limites del area de dibujo
-#define MIN_X 450
-#define MAX_X 1350
-#define MIN_Y -750
-#define MAX_Y 750
+#define MIN_X 375
+#define MAX_X 1400
+#define MIN_Y -725
+#define MAX_Y 725
 #define RANGE_Y (MAX_Y-MIN_Y)
 #define RANGE_X (MAX_X-MIN_X)
 
 // Coordenadas iniciales del brazo
 #define STARTING_X RANGE_X-MIN_X
 #define STARTING_Y RANGE_Y
-
 
 // Ciclos del scheduler que espera el brazo a que se terminen de mover los servos
 #define WAIT_CYCLES 2

@@ -133,20 +133,20 @@ void SERVO_calculate_range()
 {
   float R, theta, gamma, alpha, beta;
 
-  int pos_y = 90;
-  int pos_x = 90;
+  int pos_y = ARM_LENGTH_A;
+  int pos_x = ARM_LENGTH_B;
   bool negative_found = false;
 
-  int min_x = 90;
-  int max_x = 90;
+  int min_x = ARM_LENGTH_B;
+  int max_x = ARM_LENGTH_B;
   bool min_x_found, max_x_found;
 
-  for (int y = 90; y > -90; y--) // For each height
+  for (int y = ARM_LENGTH_A; y > -ARM_LENGTH_A; y--) // For each height
   {
     pos_y = y;  
-    pos_x = 90; // Reset X position and min/max values
-    min_x = 90; 
-    max_x = 90;
+    pos_x = ARM_LENGTH_B; // Reset X position and min/max values
+    min_x = ARM_LENGTH_B; 
+    max_x = ARM_LENGTH_B;
     min_x_found = false;
     max_x_found = false;
 
@@ -176,7 +176,7 @@ void SERVO_calculate_range()
     }
 
     // Calculate max_x
-    pos_x = 90;
+    pos_x = ARM_LENGTH_B;
     negative_found = false;
     while (!negative_found)
     {
@@ -207,4 +207,5 @@ void SERVO_calculate_range()
       Serial.println("Altura (" + String((int)pos_y) + "): No valid range for X");
   }
   Serial.println("TEST FINALIZADO");
+  delay(5000);
 }
