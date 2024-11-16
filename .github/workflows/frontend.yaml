@@ -1,34 +1,28 @@
-name: Frontend CI/CD
+name: Deploy Frontend to S3
 
 on:
   push:
-    branches:
-    - main
     paths:
-    - 'frontend/**'
+      - 'frontend/**' # Trigger only when files in the "frontend" directory are modified
   pull_request:
-    branches:
-    - main
     paths:
-    - 'frontend/**'
+      - 'frontend/**'
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-    - name: Set Docker image tag based on commit SHA
-      id: get-sha
-      run: echo "::set-output name=sha_tag::$(git rev-parse --short HEAD)"
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-    - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/plotter-frontend:${{ steps.get-sha.outputs.sha_tag }} ./frontend
-
-    - name: Login to DockerHub
-      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-
-    - name: Push Docker image to DockerHub
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/plotter-frontend:${{ steps.get-sha.outputs.sha_tag }}
+    - name: Sync frontend directory to S3
+      run: |
+        aws s3 sync ./frontend/ s3://2024-unlp-plotter-frontend/ --delete
