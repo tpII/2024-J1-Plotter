@@ -1,17 +1,12 @@
-# Usa una imagen base de Python
-FROM python:3.9-slim
+# Usa la imagen base de Lambda para Python 3.8
+FROM public.ecr.aws/lambda/python:3.8
 
-# Establece el directorio de trabajo dentro del contenedor
-WORKDIR /app
+# Copia el código de la función y las dependencias
+COPY lambda_function.py /var/task/
+COPY requirements.txt /var/task/
 
-# Copia el archivo de dependencias y luego instálalas
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Instala las dependencias desde requirements.txt
+RUN pip install -r /var/task/requirements.txt
 
-# Copia el código de la aplicación dentro del contenedor
-COPY . .
-
-# Expone el puerto 5000 para Flask
-EXPOSE 5000
-
-CMD ["python", "app.py"]
+# Define el punto de entrada para Lambda (handler)
+CMD ["lambda_function.lambda_handler"]
