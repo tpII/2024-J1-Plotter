@@ -1,32 +1,32 @@
-name: Upload Lambda Code to S3
+name: Deploy Lambda Code
 
 on:
   push:
-    paths:
-    - 'backend/**' # Trigger only when files in the 'backend' directory are modified
+    branches:
+      - main
   pull_request:
-    paths:
-    - 'backend/**'
+    types: [closed]
+
 jobs:
   upload-lambda:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Configure AWS Credentials
+    - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Zip Lambda Code
+    - name: Upload Lambda Code to S3
       run: |
-        cd backend
-        zip -r lambda.zip index.js
+        aws s3 cp index.js s3://2024-unlp-plotter-backend/
 
-    - name: Upload to S3
+    - name: Update Source Code Hash Trigger
       run: |
-        aws s3 cp backend/lambda.zip s3://2024-unlp-plotter-backend/lambda.zip
+        echo "$(date +%s)" > source-code-hash-trigger
+        aws s3 cp source-code-hash-trigger s3://2024-unlp-plotter-backend/
