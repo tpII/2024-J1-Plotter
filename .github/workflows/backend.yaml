@@ -24,7 +24,7 @@ jobs:
 
     - name: Upload Lambda Code to S3
       run: |
-        aws s3 cp index.js s3://2024-unlp-plotter-backend/
+        aws s3 cp backend/index.js s3://2024-unlp-plotter-backend/
 
     - name: Update Source Code Hash Trigger
       run: |
