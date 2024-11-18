@@ -7,6 +7,8 @@ resource "aws_lambda_function" "this" {
   # Use the S3 bucket and key to specify the Lambda code
   s3_bucket = var.s3_bucket_name
   s3_key    = var.s3_object_key
+
+  source_code_hash = filebase64sha256("${path.module}/source-code-hash-trigger")
   environment {
     variables = var.environment_variables
   }
