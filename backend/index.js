@@ -1,27 +1,24 @@
+# Hola mundo 
 exports.handler = async (event) => {
-    console.log("Request received:", JSON.stringify(event, null, 2));
+    console.log("Event received:", JSON.stringify(event, null, 2));
 
-    // Extract HTTP method and query parameters
+    // Extract HTTP method and request body
     const httpMethod = event.httpMethod || "UNKNOWN";
     const queryParams = event.queryStringParameters || {};
     const body = event.body ? JSON.parse(event.body) : {};
 
-    // Define a simple response object
-    let responseMessage = "Hello from Lambda!";
+    let responseMessage;
 
-    // Example logic based on HTTP method
+    // Handle HTTP methods
     if (httpMethod === "GET") {
-        responseMessage = "GET request received!";
-        if (Object.keys(queryParams).length > 0) {
-            responseMessage += ` Query parameters: ${JSON.stringify(queryParams)}`;
-        }
+        responseMessage = `GET request received! Query parameters: ${JSON.stringify(queryParams)}`;
     } else if (httpMethod === "POST") {
         responseMessage = `POST request received! Body: ${JSON.stringify(body)}`;
     } else {
         responseMessage = `HTTP method ${httpMethod} is not supported.`;
     }
 
-    // Response back to API Gateway
+    // Return a response
     return {
         statusCode: 200,
         headers: {

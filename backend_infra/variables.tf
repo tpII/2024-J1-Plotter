@@ -5,15 +5,16 @@ variable "aws_region" {
 }
 
 variable "s3_bucket_name" {
-  description = "The name of the S3 bucket for Lambda code storage"
+  description = "Nombre del bucket S3 existente para el código Lambda"
   type        = string
   default     = "2024-unlp-plotter-backend"
 }
 
+
 variable "s3_object_key" {
   description = "The S3 object key (path) for the Lambda code"
   type        = string
-  default     = "index.js"
+  default     = "lambda.zip"
 }
 
 variable "lambda_function_name" {
