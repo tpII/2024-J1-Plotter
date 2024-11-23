@@ -16,7 +16,12 @@ jobs:
 
     - name: Set up Docker Tag
       id: tag
-      run: echo "TAG=${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+      run: |
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          TAG="latest"
+        else
+          TAG="gian"
+        fi >> $GITHUB_ENV
 
     - name: Log in to DockerHub
       uses: docker/login-action@v2
