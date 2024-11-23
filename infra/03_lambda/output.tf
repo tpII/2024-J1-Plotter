@@ -1,14 +1,14 @@
 output "lambda_function_name" {
-  description = "The name of the Lambda function"
+  description = "El nombre de la función Lambda"
   value       = aws_lambda_function.drawing_lambda.function_name
 }
 
 output "lambda_function_arn" {
-  description = "The ARN of the Lambda function"
+  description = "El ARN de la función Lambda"
   value       = aws_lambda_function.drawing_lambda.arn
 }
 
 output "lambda_execution_role_arn" {
-  description = "The ARN of the IAM execution role for the Lambda function"
+  description = "El ARN del rol de ejecución de Lambda"
   value       = aws_iam_role.lambda_execution_role.arn
 }

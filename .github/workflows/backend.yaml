@@ -1,4 +1,4 @@
-name: Backend Docker Build and Push
+name: Backend Docker Build, Push, and Update Lambda
 
 on:
   push:
@@ -7,20 +7,22 @@ on:
       - main
 
 jobs:
-  build-and-push:
+  build-push-update:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # Inicia sesión en DockerHub
     - name: Log in to DockerHub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build Docker Image
+    # Construye y publica la imagen Docker
+    - name: Build and Push Docker Image
       run: |
         if [ "${GITHUB_REF_NAME}" = "main" ]; then
           IMAGE_TAG="latest"
@@ -29,3 +31,23 @@ jobs:
         fi
         docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:$IMAGE_TAG backend/
         docker push ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:$IMAGE_TAG
+
+    # Configura las credenciales de AWS
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    # Actualiza la función Lambda para usar la nueva imagen
+    - name: Update Lambda Function
+      run: |
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          IMAGE_TAG="latest"
+        else
+          IMAGE_TAG="gian"
+        fi
+        aws lambda update-function-code \
+          --function-name drawing-lambda \
+          --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG
