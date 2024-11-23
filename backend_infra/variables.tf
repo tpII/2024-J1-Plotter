@@ -9,6 +9,7 @@ variable "aws_profile" {
 variable "lambda_image_uri" {
   description = "The ECR URI of the Docker image for the Lambda function"
   type        = string
+  default = "gianfrancolasala/lambda-backend:gian"
 }
 
 variable "function_name" {
