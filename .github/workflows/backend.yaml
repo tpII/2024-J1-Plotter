@@ -5,6 +5,8 @@ on:
     branches:
       - gian
       - main
+    paths:
+      - 'backend/**' # Trigger only when files in the "backend" directory are modified
 
 jobs:
   build-push-update:
