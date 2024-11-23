@@ -1,32 +1,33 @@
-name: Deploy Lambda Code
+name: Backend Docker Build and Push
 
 on:
   push:
     branches:
+      - gian
       - main
-  pull_request:
-    types: [closed]
 
 jobs:
-  upload-lambda:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up AWS CLI
-      uses: aws-actions/configure-aws-credentials@v2
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Upload Lambda Code to S3
+    - name: Build Docker Image
       run: |
-        aws s3 cp backend/index.js s3://2024-unlp-plotter-backend/
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') backend/
+        docker tag ${{ secrets.DOCKER_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') ${{ secrets.DOCKER_USERNAME }}/lambda-backend:latest
 
-    - name: Update Source Code Hash Trigger
+    - name: Push Docker Image
       run: |
-        echo "$(date +%s)" > source-code-hash-trigger
-        aws s3 cp source-code-hash-trigger s3://2024-unlp-plotter-backend/
+        docker push ${{ secrets.DOCKER_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S')
+        if [ "${{ github.ref_name }}" = "main" ]; then
+          docker push ${{ secrets.DOCKER_USERNAME }}/lambda-backend:latest
+        fi
