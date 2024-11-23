@@ -15,12 +15,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Step 2: Log in to Amazon ECR
+    # Step 2: Configure AWS credentials
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    # Step 3: Log in to Amazon ECR
     - name: Log in to Amazon ECR
       run: |
         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
 
-    # Step 3: Build and Tag Docker Image
+    # Step 4: Build and Tag Docker Image
     - name: Build and Tag Docker Image
       run: |
         if [ "${GITHUB_REF_NAME}" = "main" ]; then
@@ -30,7 +38,7 @@ jobs:
         fi
         docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG backend/
 
-    # Step 4: Push Image to ECR
+    # Step 5: Push Docker Image to Amazon ECR
     - name: Push Docker Image to Amazon ECR
       run: |
         if [ "${GITHUB_REF_NAME}" = "main" ]; then
@@ -39,14 +47,6 @@ jobs:
           IMAGE_TAG="gian"
         fi
         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG
-
-    # Step 5: Configure AWS Credentials
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
 
     # Step 6: Update Lambda Function
     - name: Update Lambda Function
