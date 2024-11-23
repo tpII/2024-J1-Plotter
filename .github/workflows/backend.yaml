@@ -17,17 +17,17 @@ jobs:
     - name: Log in to DockerHub
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build Docker Image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') backend/
-        docker tag ${{ secrets.DOCKER_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') ${{ secrets.DOCKER_USERNAME }}/lambda-backend:latest
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') backend/
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:latest
 
     - name: Push Docker Image
       run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S')
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S')
         if [ "${{ github.ref_name }}" = "main" ]; then
-          docker push ${{ secrets.DOCKER_USERNAME }}/lambda-backend:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:latest
         fi
