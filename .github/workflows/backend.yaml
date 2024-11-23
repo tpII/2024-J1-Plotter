@@ -11,28 +11,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Inicia sesión en DockerHub
-    - name: Log in to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    # Step 2: Log in to Amazon ECR
+    - name: Log in to Amazon ECR
+      run: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
 
-    # Construye y publica la imagen Docker
-    - name: Build and Push Docker Image
+    # Step 3: Build and Tag Docker Image
+    - name: Build and Tag Docker Image
       run: |
         if [ "${GITHUB_REF_NAME}" = "main" ]; then
           IMAGE_TAG="latest"
         else
           IMAGE_TAG="gian"
         fi
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:$IMAGE_TAG backend/
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:$IMAGE_TAG
+        docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG backend/
 
-    # Configura las credenciales de AWS
+    # Step 4: Push Image to ECR
+    - name: Push Docker Image to Amazon ECR
+      run: |
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          IMAGE_TAG="latest"
+        else
+          IMAGE_TAG="gian"
+        fi
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG
+
+    # Step 5: Configure AWS Credentials
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -40,7 +48,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    # Actualiza la función Lambda para usar la nueva imagen
+    # Step 6: Update Lambda Function
     - name: Update Lambda Function
       run: |
         if [ "${GITHUB_REF_NAME}" = "main" ]; then
