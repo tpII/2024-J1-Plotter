@@ -25,13 +25,6 @@ variable "timeout" {
   default     = 15
 }
 
-variable "environment_variables" {
-  description = "Variables de entorno para la función Lambda"
-  type        = map(string)
-  default     = {
-    IOT_TOPIC = "robot/draw"
-  }
-}
 
 variable "tags" {
   description = "Etiquetas para aplicar a la función Lambda"
@@ -39,5 +32,13 @@ variable "tags" {
   default     = {
     Environment = "Production"
     Project     = "UNLP Plotter"
+  }
+}
+
+variable "environment_variables" {
+  description = "Environment variables for the Lambda function"
+  type        = map(string)
+  default     = {
+    MQTT_TOPIC = "robot/draw"
   }
 }

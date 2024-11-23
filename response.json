@@ -1,1 +1,1 @@
-{"errorMessage": "the JSON object must be str, bytes or bytearray, not dict", "errorType": "TypeError", "requestId": "606856d0-bd62-452e-9c95-afaf3ea7d39e", "stackTrace": ["  File \"/var/task/lambda_function.py\", line 10, in lambda_handler\n    drawing_data = json.loads(event['body'])\n", "  File \"/var/lang/lib/python3.9/json/__init__.py\", line 339, in loads\n    raise TypeError(f'the JSON object must be str, bytes or bytearray, '\n"]}
+{"statusCode": 500, "body": "{\"error\": \"'MQTT_TOPIC'\"}"}
