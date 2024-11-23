@@ -14,6 +14,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Set up Docker Tag
+      id: tag
+      run: echo "TAG=${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
     - name: Log in to DockerHub
       uses: docker/login-action@v2
       with:
@@ -22,12 +26,12 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') backend/
-        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S') ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:latest
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ env.TAG }} backend/
+        docker tag ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ env.TAG }} ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:latest
 
     - name: Push Docker Image
       run: |
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ github.ref_name }}-$(date +'%Y%m%d%H%M%S')
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:${{ env.TAG }}
         if [ "${{ github.ref_name }}" = "main" ]; then
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/lambda-backend:latest
         fi
