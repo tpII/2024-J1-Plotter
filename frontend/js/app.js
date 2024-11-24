@@ -9,7 +9,7 @@ let lastY = 0;
 
 // Buffer to store coordinates
 const coordinatesBuffer = [];
-const apiGatewayUrl = 'https://<API-GATEWAY-URL>/'; // Replace with your API Gateway URL
+const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/'; // Replace with your API Gateway URL
 
 // Function to start drawing
 function startDrawing(event) {
