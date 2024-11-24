@@ -2,18 +2,19 @@
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
 
-// Set up the canvas for drawing
-let drawing = false; // Tracks if the user is currently drawing
-let lastX = 0;       // Last X coordinate
-let lastY = 0;       // Last Y coordinate
+// Variables to track drawing state
+let drawing = false;
+let lastX = 0;
+let lastY = 0;
 
-// The API Gateway URL
-const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/'; // Replace with your API Gateway URL
+// Buffer to store coordinates
+const coordinatesBuffer = [];
+const apiGatewayUrl = 'https://<API-GATEWAY-URL>/'; // Replace with your API Gateway URL
 
 // Function to start drawing
 function startDrawing(event) {
   drawing = true;
-  [lastX, lastY] = getMousePosition(event); // Get initial position
+  [lastX, lastY] = getMousePosition(event);
 }
 
 // Function to stop drawing
@@ -27,24 +28,24 @@ function stopDrawing() {
 function draw(event) {
   if (!drawing) return;
 
-  // Get the current mouse position
   const [mouseX, mouseY] = getMousePosition(event);
 
-  // Draw a line from the last position to the current position
+  // Draw on the canvas
   ctx.beginPath();
   ctx.moveTo(lastX, lastY);
   ctx.lineTo(mouseX, mouseY);
   ctx.stroke();
 
-  // Send the current coordinates to the API Gateway
-  sendCoordinates(lastX, lastY, mouseX, mouseY);
+  // Add the coordinates to the buffer
+  coordinatesBuffer.push({ x: lastX, y: lastY });
+  coordinatesBuffer.push({ x: mouseX, y: mouseY });
 
   // Update the last position
   lastX = mouseX;
   lastY = mouseY;
 }
 
-// Function to get the mouse position relative to the canvas
+// Function to get mouse position relative to the canvas
 function getMousePosition(event) {
   const rect = canvas.getBoundingClientRect();
   return [
@@ -53,14 +54,15 @@ function getMousePosition(event) {
   ];
 }
 
-// Function to send coordinates to the API Gateway
-async function sendCoordinates(x1, y1, x2, y2) {
-  const payload = {
-    coordinates: [
-      { x: x1, y: y1 },
-      { x: x2, y: y2 }
-    ]
-  };
+// Function to send buffered coordinates to the API
+async function sendCoordinates() {
+  if (coordinatesBuffer.length === 0) return; // No coordinates to send
+
+  // Prepare the payload
+  const payload = { coordinates: [...coordinatesBuffer] };
+
+  // Clear the buffer after preparing the payload
+  coordinatesBuffer.length = 0;
 
   try {
     const response = await fetch(apiGatewayUrl, {
@@ -78,6 +80,9 @@ async function sendCoordinates(x1, y1, x2, y2) {
     console.error('Error sending coordinates:', error);
   }
 }
+
+// Set up an interval to send buffered coordinates periodically
+setInterval(sendCoordinates, 1000); // Send every 1 second
 
 // Add event listeners for mouse interactions
 canvas.addEventListener('mousedown', startDrawing);
