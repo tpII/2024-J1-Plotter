@@ -1,20 +1,21 @@
-# IoT Thing Resource
+# Fetch the IoT Core endpoint
+data "aws_iot_endpoint" "endpoint" {
+  endpoint_type = "iot:Data-ATS"
+}
+
 resource "aws_iot_thing" "robot_thing" {
   name = var.thing_name
 }
 
-# IoT Certificate
 resource "aws_iot_certificate" "robot_cert" {
   active = true
 }
 
-# Attach the Certificate to the Thing
 resource "aws_iot_thing_principal_attachment" "robot_attachment" {
   thing     = aws_iot_thing.robot_thing.name
   principal = aws_iot_certificate.robot_cert.arn
 }
 
-# IoT Policy
 resource "aws_iot_policy" "robot_policy" {
   name   = var.policy_name
   policy = <<EOF
@@ -38,7 +39,6 @@ resource "aws_iot_policy" "robot_policy" {
 EOF
 }
 
-# Attach the Policy to the Certificate
 resource "aws_iot_policy_attachment" "robot_policy_attachment" {
   policy   = aws_iot_policy.robot_policy.name
   target   = aws_iot_certificate.robot_cert.arn
