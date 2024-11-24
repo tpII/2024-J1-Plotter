@@ -12,3 +12,11 @@ output "api_id" {
   description = "The ID of the API Gateway"
   value       = aws_apigatewayv2_api.api.id
 }
+
+output "user_pool_client_id" {
+  value = aws_cognito_user_pool_client.user_pool_client.id
+}
+
+output "user_pool_id" {
+  value = aws_cognito_user_pool.user_pool.id
+}
