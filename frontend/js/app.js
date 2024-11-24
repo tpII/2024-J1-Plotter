@@ -42,11 +42,13 @@ loginForm.addEventListener('submit', async (event) => {
     const data = await response.json();
     if (response.ok) {
       idToken = data.AuthenticationResult.IdToken;
+      console.log('JWT Token:', idToken); // Log the token
       loginContainer.style.display = 'none';
       canvasContainer.style.display = 'block';
     } else {
       throw new Error(data.message || 'Failed to login');
     }
+    
   } catch (error) {
     loginError.textContent = error.message;
   }
@@ -101,16 +103,15 @@ async function sendStroke(stroke) {
   if (!stroke || stroke.length === 0) return;
 
   try {
+    console.log('Authorization', `Bearer ${idToken}`)
     const response = await fetch(apiGatewayUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': idToken ? `Bearer ${idToken}` : undefined, // Ensure Bearer prefix
+        'Authorization': `Bearer ${idToken}`, // Ensure Bearer prefix
       },
       body: JSON.stringify({ stroke }),
     });
-    
-
 
     if (!response.ok) {
       console.error('Failed to send stroke:', response.statusText);
@@ -119,6 +120,7 @@ async function sendStroke(stroke) {
     console.error('Error sending stroke:', error);
   }
 }
+
 
 // Add event listeners for canvas interactions
 canvas.addEventListener('mousedown', startDrawing);

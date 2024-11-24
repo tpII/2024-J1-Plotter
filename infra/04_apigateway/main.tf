@@ -17,7 +17,7 @@ resource "aws_apigatewayv2_api" "api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = var.cors_allow_origins
+    allow_origins = ["http://127.0.0.1:3000","https://d212solchqqpyx.cloudfront.net/"]
     allow_methods = var.cors_allow_methods
     allow_headers = var.cors_allow_headers
     expose_headers = var.cors_expose_headers
@@ -83,4 +83,10 @@ resource "aws_lambda_permission" "api_gateway_permission" {
   function_name = var.lambda_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*"
+}
+
+resource "aws_apigatewayv2_route" "options_route" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "OPTIONS /" # Matches all routes for preflight
+  target    = null # No integration required for OPTIONS
 }
