@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Real-Time Drawing Application</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Fonts and Styles -->
-  <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/skeleton.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drawing Application</title>
   <link rel="stylesheet" href="css/style.css">
-
-  <link rel="icon" type="image/png" href="images/favicon.png">
 </head>
 <body>
-  <div class="container">
-    <div class="row">
-      <div class="one-half column" style="margin-top: 5%">
-        <h4>Draw on the Canvas</h4>
-        <canvas id="drawCanvas" width="400" height="400" style="border:1px solid #000;"></canvas>
-      </div>
-    </div>
+  <div id="login-container">
+    <h2>Login</h2>
+    <form id="login-form">
+      <label for="username">Username:</label>
+      <input type="text" id="username" required>
+      <label for="password">Password:</label>
+      <input type="password" id="password" required>
+      <button type="submit">Login</button>
+    </form>
+    <p id="login-error" style="color: red;"></p>
   </div>
+
+  <div id="canvas-container" style="display: none;">
+    <h2>Draw on the Canvas</h2>
+    <canvas id="drawCanvas" width="400" height="400" style="border: 1px solid black;"></canvas>
+    <button id="logout-button">Logout</button>
+  </div>
+
   <script src="js/app.js"></script>
 </body>
 </html>
