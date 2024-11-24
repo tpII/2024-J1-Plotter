@@ -4,24 +4,30 @@ const ctx = canvas.getContext('2d');
 
 // Variables to track drawing state
 let drawing = false;
-let lastX = 0;
-let lastY = 0;
-
-// Buffer to store coordinates
-const coordinatesBuffer = [];
+let strokeBuffer = [];
 const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/'; // Replace with your API Gateway URL
 
 // Function to start drawing
 function startDrawing(event) {
   drawing = true;
-  [lastX, lastY] = getMousePosition(event);
+  strokeBuffer = []; // Reset the stroke buffer for a new stroke
+  const [mouseX, mouseY] = getMousePosition(event);
+
+  // Start the stroke
+  strokeBuffer.push({ x: mouseX, y: mouseY });
 }
 
 // Function to stop drawing
-function stopDrawing() {
+async function stopDrawing() {
+  if (!drawing) return;
   drawing = false;
-  lastX = 0;
-  lastY = 0;
+
+  // Send the completed stroke to the API
+  if (strokeBuffer.length > 0) {
+    await sendStroke(strokeBuffer);
+  }
+
+  strokeBuffer = []; // Clear the buffer
 }
 
 // Function to draw on the canvas
@@ -32,17 +38,13 @@ function draw(event) {
 
   // Draw on the canvas
   ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
+  const lastPoint = strokeBuffer[strokeBuffer.length - 1];
+  ctx.moveTo(lastPoint.x, lastPoint.y);
   ctx.lineTo(mouseX, mouseY);
   ctx.stroke();
 
-  // Add the coordinates to the buffer
-  coordinatesBuffer.push({ x: lastX, y: lastY });
-  coordinatesBuffer.push({ x: mouseX, y: mouseY });
-
-  // Update the last position
-  lastX = mouseX;
-  lastY = mouseY;
+  // Add the current point to the stroke buffer
+  strokeBuffer.push({ x: mouseX, y: mouseY });
 }
 
 // Function to get mouse position relative to the canvas
@@ -54,15 +56,12 @@ function getMousePosition(event) {
   ];
 }
 
-// Function to send buffered coordinates to the API
-async function sendCoordinates() {
-  if (coordinatesBuffer.length === 0) return; // No coordinates to send
+// Function to send the completed stroke to the API
+async function sendStroke(stroke) {
+  if (!stroke || stroke.length === 0) return; // No stroke to send
 
   // Prepare the payload
-  const payload = { coordinates: [...coordinatesBuffer] };
-
-  // Clear the buffer after preparing the payload
-  coordinatesBuffer.length = 0;
+  const payload = { stroke };
 
   try {
     const response = await fetch(apiGatewayUrl, {
@@ -74,15 +73,12 @@ async function sendCoordinates() {
     });
 
     if (!response.ok) {
-      console.error('Failed to send coordinates:', response.statusText);
+      console.error('Failed to send stroke:', response.statusText);
     }
   } catch (error) {
-    console.error('Error sending coordinates:', error);
+    console.error('Error sending stroke:', error);
   }
 }
-
-// Set up an interval to send buffered coordinates periodically
-setInterval(sendCoordinates, 1000); // Send every 1 second
 
 // Add event listeners for mouse interactions
 canvas.addEventListener('mousedown', startDrawing);
