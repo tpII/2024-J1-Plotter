@@ -1,53 +1,50 @@
 variable "api_name" {
   description = "The name of the API Gateway"
   type        = string
-  default     = "drawing-api"
 }
 
-variable "lambda_function_arn" {
-  description = "The ARN of the Lambda function to integrate with API Gateway"
-  type        = string
-}
-
-variable "lambda_function_name" {
-  description = "The name of the Lambda function to integrate with API Gateway"
-  type        = string
-}
-
-# CORS Configuration
 variable "cors_allow_origins" {
-  description = "List of origins allowed for CORS"
+  description = "CORS allowed origins"
   type        = list(string)
-  default     = ["*"]
+  default     = ["http://localhost:3000"]
 }
 
 variable "cors_allow_methods" {
-  description = "List of HTTP methods allowed for CORS"
+  description = "CORS allowed methods"
   type        = list(string)
   default     = ["GET", "POST", "OPTIONS"]
 }
 
 variable "cors_allow_headers" {
-  description = "List of HTTP headers allowed for CORS"
+  description = "CORS allowed headers"
   type        = list(string)
   default     = ["Content-Type", "Authorization"]
 }
 
 variable "cors_expose_headers" {
-  description = "List of HTTP headers exposed to the client"
+  description = "CORS exposed headers"
   type        = list(string)
-  default     = ["x-amzn-RequestId"]
+  default     = ["*"]
 }
 
 variable "cors_max_age" {
-  description = "Maximum age for CORS preflight requests (in seconds)"
+  description = "CORS max age in seconds"
   type        = number
-  default     = 3600
+  default     = 86400
 }
 
-# Logging Configuration
+variable "lambda_function_arn" {
+  description = "The ARN of the Lambda function"
+  type        = string
+}
+
+variable "lambda_function_name" {
+  description = "The name of the Lambda function"
+  type        = string
+}
+
 variable "log_retention_in_days" {
-  description = "Number of days to retain logs in CloudWatch"
+  description = "CloudWatch log retention in days"
   type        = number
   default     = 7
 }

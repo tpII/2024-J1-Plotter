@@ -105,10 +105,12 @@ async function sendStroke(stroke) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': idToken ? `Bearer ${idToken}` : undefined,
+        'Authorization': idToken ? `Bearer ${idToken}` : undefined, // Ensure Bearer prefix
       },
       body: JSON.stringify({ stroke }),
     });
+    
+
 
     if (!response.ok) {
       console.error('Failed to send stroke:', response.statusText);

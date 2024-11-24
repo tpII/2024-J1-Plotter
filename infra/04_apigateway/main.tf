@@ -3,14 +3,13 @@ resource "aws_cognito_user_pool" "user_pool" {
 }
 
 resource "aws_cognito_user_pool_client" "user_pool_client" {
-  name         = "${var.api_name}-client"
-  user_pool_id = aws_cognito_user_pool.user_pool.id
-
+  name                             = "${var.api_name}-client"
+  user_pool_id                     = aws_cognito_user_pool.user_pool.id
   allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_flows                 = ["implicit"]
-  allowed_oauth_scopes                = ["email", "openid"]
-  generate_secret                     = false
-  callback_urls                       = ["http://localhost:3000"] # Cambia según tu frontend
+  allowed_oauth_flows              = ["implicit"]
+  allowed_oauth_scopes             = ["email", "openid"]
+  generate_secret                  = false
+  callback_urls                    = ["http://localhost:3000"] # Update to match your frontend URL
 }
 
 resource "aws_apigatewayv2_api" "api" {
@@ -35,10 +34,9 @@ resource "aws_apigatewayv2_authorizer" "cognito_authorizer" {
 
   jwt_configuration {
     audience = [aws_cognito_user_pool_client.user_pool_client.id]
-    issuer   = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cURWxGRcK"
+    issuer   = "https://cognito-idp.us-east-1.amazonaws.com/${aws_cognito_user_pool.user_pool.id}"
   }
 }
-
 
 resource "aws_apigatewayv2_integration" "lambda_integration" {
   api_id           = aws_apigatewayv2_api.api.id
@@ -55,7 +53,6 @@ resource "aws_apigatewayv2_route" "default_route" {
   authorization_type = "JWT"
   authorizer_id      = aws_apigatewayv2_authorizer.cognito_authorizer.id
 }
-
 
 resource "aws_apigatewayv2_stage" "default_stage" {
   api_id      = aws_apigatewayv2_api.api.id
