@@ -103,7 +103,7 @@ async function sendStroke(stroke) {
   if (!stroke || stroke.length === 0) return;
 
   try {
-    console.log('Authorization', `Bearer ${idToken}`)
+    console.log('Authorization Header:', `Bearer ${idToken}`);
     const response = await fetch(apiGatewayUrl, {
       method: 'POST',
       headers: {

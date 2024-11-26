@@ -17,11 +17,11 @@ resource "aws_apigatewayv2_api" "api" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = ["http://127.0.0.1:3000","https://d212solchqqpyx.cloudfront.net/"]
-    allow_methods = var.cors_allow_methods
-    allow_headers = var.cors_allow_headers
-    expose_headers = var.cors_expose_headers
-    max_age = var.cors_max_age
+    allow_origins = ["http://127.0.0.1:3000","https://d212solchqqpyx.cloudfront.net/"] # Frontend origin
+    allow_methods = ["OPTIONS", "GET", "POST"]
+    allow_headers = ["Authorization", "Content-Type"]
+    expose_headers = ["Authorization"]
+    max_age       = 3600
   }
 }
 
@@ -85,8 +85,3 @@ resource "aws_lambda_permission" "api_gateway_permission" {
   source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*"
 }
 
-resource "aws_apigatewayv2_route" "options_route" {
-  api_id    = aws_apigatewayv2_api.api.id
-  route_key = "OPTIONS /" # Matches all routes for preflight
-  target    = null # No integration required for OPTIONS
-}

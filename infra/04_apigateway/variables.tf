@@ -6,7 +6,7 @@ variable "api_name" {
 variable "cors_allow_origins" {
   description = "CORS allowed origins"
   type        = list(string)
-  default     = ["http://127.0.0.1:3000","https://d212solchqqpyx.cloudfront.net/"]
+  default     = ["*"]
 }
 
 variable "cors_allow_methods" {
