@@ -48,6 +48,7 @@ bool ARM_line_to(int target_x, int target_y)
   //Solo acepta la siguiente linea si no se esta moviendo
   if (!currently_moving)
   {
+    //Solo se mueve si las coordenadas de destino se encuentran dentro del area de dibujo
     if (check_valid_coords(target_x, target_y))
     {
       target_pos_x = target_x;
@@ -66,6 +67,7 @@ void ARM_shift_by(int shift_x, int shift_y)
 {
   if (!currently_moving)
   {
+    //Solo se mueve si las coordenadas de destino se encuentran dentro del area de dibujo
     if (check_valid_coords(current_pos_x + shift_x, current_pos_y + shift_y))
     {
       target_pos_x = current_pos_x + shift_x;

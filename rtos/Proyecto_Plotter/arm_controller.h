@@ -12,6 +12,7 @@
 #define MAX_Y 725
 #define RANGE_Y (MAX_Y-MIN_Y)
 #define RANGE_X (MAX_X-MIN_X)
+  //Dimensiones del area de dibujo (X,Y): [1025, 1450] 
 
 // Coordenadas iniciales del brazo
 #define STARTING_X RANGE_X-MIN_X

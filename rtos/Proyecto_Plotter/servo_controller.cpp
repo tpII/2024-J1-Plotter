@@ -26,6 +26,10 @@ void SERVO_init()
   servo_alpha.attach(SERVO_ALPHA_PIN);
   servo_beta.attach(SERVO_BETA_PIN);
   servo_vertical.attach(SERVO_VERTICAL_PIN);
+
+  //Angulos iniciales
+  SERVO_setAngle(SERVO_ALPHA_ID, 90); 
+  SERVO_setAngle(SERVO_BETA_ID, 0); 
 }
 
 //Setea el angulo del servo correspondiente 
@@ -36,10 +40,10 @@ static void SERVO_setAngle(int servoID, int angle)
 
   switch (servoID)
   {
-    case SERVO_ALPHA_ID: angle_alpha = angle;
+    case SERVO_ALPHA_ID: angle_alpha = 180-angle;
     break;
 
-    case SERVO_BETA_ID: angle_beta = angle;
+    case SERVO_BETA_ID: angle_beta = 180-angle;
     break;
 
     case SERVO_VERTICAL_ID: angle_vertical = angle;
