@@ -1,32 +1,63 @@
-name: Deploy Lambda Code
+name: Backend Docker Build, Push, and Update Lambda
 
 on:
   push:
     branches:
+      - gian
       - main
-  pull_request:
-    types: [closed]
+    paths:
+      - 'backend/**' # Trigger only when files in the "backend" directory are modified
 
 jobs:
-  upload-lambda:
+  build-push-update:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    # Step 1: Checkout code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up AWS CLI
+    # Step 2: Configure AWS credentials
+    - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Upload Lambda Code to S3
+    # Step 3: Log in to Amazon ECR
+    - name: Log in to Amazon ECR
       run: |
-        aws s3 cp backend/index.js s3://2024-unlp-plotter-backend/
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
 
-    - name: Update Source Code Hash Trigger
+    # Step 4: Build and Tag Docker Image
+    - name: Build and Tag Docker Image
       run: |
-        echo "$(date +%s)" > source-code-hash-trigger
-        aws s3 cp source-code-hash-trigger s3://2024-unlp-plotter-backend/
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          IMAGE_TAG="latest"
+        else
+          IMAGE_TAG="gian"
+        fi
+        docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG backend/
+
+    # Step 5: Push Docker Image to Amazon ECR
+    - name: Push Docker Image to Amazon ECR
+      run: |
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          IMAGE_TAG="latest"
+        else
+          IMAGE_TAG="gian"
+        fi
+        docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG
+
+    # Step 6: Update Lambda Function
+    - name: Update Lambda Function
+      run: |
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          IMAGE_TAG="latest"
+        else
+          IMAGE_TAG="gian"
+        fi
+        aws lambda update-function-code \
+          --function-name drawing-lambda \
+          --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/lambda-backend:$IMAGE_TAG

@@ -1,0 +1,20 @@
+body {
+    font-family: 'Raleway', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    text-align: center;
+  }
+  
+  #drawCanvas {
+    cursor: crosshair;
+  }
+  
+  .container {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  h4 {
+    color: #555;
+  }
+  
