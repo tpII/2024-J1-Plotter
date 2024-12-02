@@ -1,6 +1,6 @@
 const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/'; // Replace with your API URL
 const cognitoClientId = '32ad6ce6ub7eq69qetg3f151cj'; // Replace with your Cognito User Pool Client ID
-const cognitoAuthUrl = 'https://your-cognito-domain.auth.us-east-1.amazoncognito.com/oauth2/token'; // Replace with your Cognito domain
+const cognitoAuthUrl = 'https://plotter.auth.us-east-1.amazoncognito.com/oauth2/token'; // Replace with your Cognito domain
 let idToken = null;
 
 // Login Elements
