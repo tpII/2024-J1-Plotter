@@ -1,6 +1,7 @@
 const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/';
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
+const canvasContainer = canvas.parentElement; // Contenedor del canvas
 const overlayMessage = document.createElement('div'); // Overlay message
 const resetButton = document.getElementById('resetButton');
 
@@ -70,18 +71,25 @@ updateAuthButton(); // Actualiza el botón al cargar la página
 function checkCanvasState() {
   if (!idToken) {
     overlayMessage.style.display = 'flex';
+    canvasContainer.style.opacity = '0.5'; // Ventana transparente
     canvas.style.pointerEvents = 'none';
     canvas.style.opacity = '0.5';
   } else {
     overlayMessage.style.display = 'none';
+    canvasContainer.style.opacity = '1'; // Ventana sin transparencia
     canvas.style.pointerEvents = 'auto';
     canvas.style.opacity = '1';
   }
 }
 
 // Inicializa el mensaje de overlay sobre el canvas
+// Inicializa el mensaje de overlay sobre el canvas
 function setupCanvasOverlay() {
-  overlayMessage.textContent = "Antes de dibujar debes iniciar sesión";
+  overlayMessage.innerHTML = `
+    <div style="text-align: center;">
+      <span>Antes de dibujar debes </span>
+      <a href="${cognitoLoginUrl}" class="underline text-blue-500">iniciar sesión</a>
+    </div>`;
   overlayMessage.style.position = 'absolute';
   overlayMessage.style.top = '50%';
   overlayMessage.style.left = '50%';
@@ -94,6 +102,7 @@ function setupCanvasOverlay() {
   overlayMessage.style.borderRadius = '8px';
   overlayMessage.style.display = 'none';
   overlayMessage.style.zIndex = '10';
+  overlayMessage.style.lineHeight = '2rem'; // Añade espacio entre líneas para mejor diseño
 
   const canvasContainer = canvas.parentElement;
   canvasContainer.style.position = 'relative';
@@ -101,6 +110,7 @@ function setupCanvasOverlay() {
 
   checkCanvasState();
 }
+
 
 // Limpia el contenido del canvas
 function clearCanvas() {
@@ -152,11 +162,20 @@ function draw(event) {
   strokeBuffer.push({ x: mouseX, y: mouseY });
 }
 
+// Función para obtener la posición del mouse relativa al canvas (ajustado para offset y scroll)
 // Función para obtener la posición del mouse relativa al canvas
 function getMousePosition(event) {
-  const rect = canvas.getBoundingClientRect();
-  return [event.clientX - rect.left, event.clientY - rect.top];
+  const rect = canvas.getBoundingClientRect(); // Obtiene el tamaño y la posición del canvas en la ventana
+  const scaleX = canvas.width / rect.width; // Escala horizontal del canvas
+  const scaleY = canvas.height / rect.height; // Escala vertical del canvas
+
+  // Ajusta la posición del mouse considerando el scroll y el escalado
+  const mouseX = (event.clientX - rect.left) * scaleX;
+  const mouseY = (event.clientY - rect.top) * scaleY;
+
+  return [mouseX, mouseY];
 }
+
 
 // Función para enviar los trazos completados al API Gateway
 async function sendStroke(stroke) {
