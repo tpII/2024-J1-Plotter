@@ -1,75 +1,65 @@
-const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/'; // Replace with your API URL
-const cognitoClientId = '32ad6ce6ub7eq69qetg3f151cj'; // Replace with your Cognito User Pool Client ID
-const cognitoAuthUrl = 'https://your-cognito-domain.auth.us-east-1.amazoncognito.com/oauth2/token'; // Replace with your Cognito domain
-let idToken = null;
-
-// Login Elements
-const loginContainer = document.getElementById('login-container');
-const loginForm = document.getElementById('login-form');
-const loginError = document.getElementById('login-error');
+const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/'; // URL del API Gateway
 
 // Canvas Elements
-const canvasContainer = document.getElementById('canvas-container');
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
-const logoutButton = document.getElementById('logout-button');
 
-// Variables to track drawing state
+// Variables para seguimiento del dibujo
 let drawing = false;
 let strokeBuffer = [];
 
-// Function to handle login
-loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
+// const cognitoLoginUrl = "https://plotter.auth.us-east-1.amazoncognito.com/login?client_id=32ad6ce6ub7eq69qetg3f151cj&response_type=token&scope=email+openid&redirect_uri=http://localhost:3000/";
+// const cognitoLogoutUrl = "https://plotter.auth.us-east-1.amazoncognito.com/logout?client_id=32ad6ce6ub7eq69qetg3f151cj&logout_uri=http://localhost:3000/";
 
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+// URLs de Cognitocloudfront 
+const cognitoLoginUrl = "https://plotter.auth.east-1.amazoncognito.com/login?client_id=32ad6ce6ub7eq69qetg3f151cj&response_type=token&scope=email+openid&redirect_uri=https://d212solchqqpyx.cloudfront.net/";
+const cognitoLogoutUrl =
+  "https://plotter.auth.us-east-1.amazoncognito.com/logout?client_id=32ad6ce6ub7eq69qetg3f151cj&logout_uri=https://d212solchqqpyx.cloudfront.net/";
 
-  try {
-    const response = await fetch(`https://cognito-idp.us-east-1.amazonaws.com/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-amz-json-1.1',
-        'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
-      },
-      body: JSON.stringify({
-        AuthParameters: { USERNAME: username, PASSWORD: password },
-        AuthFlow: 'USER_PASSWORD_AUTH',
-        ClientId: cognitoClientId,
-      }),
-    });
+// Manejo del token de usuario
+let idToken = localStorage.getItem("idToken");
 
-    const data = await response.json();
-    if (response.ok) {
-      idToken = data.AuthenticationResult.IdToken;
-      console.log('JWT Token:', idToken); // Log the token
-      loginContainer.style.display = 'none';
-      canvasContainer.style.display = 'block';
-    } else {
-      throw new Error(data.message || 'Failed to login');
-    }
-    
-  } catch (error) {
-    loginError.textContent = error.message;
+function handleAuth() {
+  if (idToken) {
+    // Redirige al logout de Cognito
+    window.location.href = cognitoLogoutUrl;
+  } else {
+    // Redirige al login de Cognito
+    window.location.href = cognitoLoginUrl;
   }
-});
+}
 
-// Logout functionality
-logoutButton.addEventListener('click', () => {
-  idToken = null;
-  loginContainer.style.display = 'block';
-  canvasContainer.style.display = 'none';
-});
+function updateAuthButton() {
+  const loginButton = document.getElementById("loginButton");
+  if (idToken) {
+    loginButton.textContent = "Cerrar Sesión";
+  } else {
+    loginButton.textContent = "Iniciar Sesión";
+  }
+}
 
-// Function to start drawing
+// Extrae el token después del redireccionamiento de Cognito
+const hash = window.location.hash.substring(1);
+const params = new URLSearchParams(hash);
+const tokenFromUrl = params.get("id_token");
+
+if (tokenFromUrl) {
+  localStorage.setItem("idToken", tokenFromUrl); // Guarda el token
+  idToken = tokenFromUrl; // Actualiza el estado
+  window.location.hash = ""; // Limpia el hash de la URL
+}
+
+updateAuthButton(); // Actualiza el texto del botón al cargar la página
+
+// Función para iniciar el dibujo
 function startDrawing(event) {
   drawing = true;
-  strokeBuffer = []; // Reset the stroke buffer for a new stroke
+  strokeBuffer = []; // Resetea el buffer de trazos para un nuevo trazo
   const [mouseX, mouseY] = getMousePosition(event);
   strokeBuffer.push({ x: mouseX, y: mouseY });
 }
 
-// Function to stop drawing
+// Función para detener el dibujo
 async function stopDrawing() {
   if (!drawing) return;
   drawing = false;
@@ -79,7 +69,7 @@ async function stopDrawing() {
   strokeBuffer = [];
 }
 
-// Function to draw on the canvas
+// Función para dibujar en el canvas
 function draw(event) {
   if (!drawing) return;
 
@@ -92,13 +82,13 @@ function draw(event) {
   strokeBuffer.push({ x: mouseX, y: mouseY });
 }
 
-// Function to get mouse position relative to the canvas
+// Función para obtener la posición del mouse relativa al canvas
 function getMousePosition(event) {
   const rect = canvas.getBoundingClientRect();
   return [event.clientX - rect.left, event.clientY - rect.top];
 }
 
-// Function to send the completed stroke to the API
+// Función para enviar los trazos completados al API Gateway
 async function sendStroke(stroke) {
   if (!stroke || stroke.length === 0) return;
 
@@ -108,7 +98,7 @@ async function sendStroke(stroke) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`, // Ensure Bearer prefix
+        'Authorization': `Bearer ${idToken}`, // Token con prefijo Bearer
       },
       body: JSON.stringify({ stroke }),
     });
@@ -121,8 +111,7 @@ async function sendStroke(stroke) {
   }
 }
 
-
-// Add event listeners for canvas interactions
+// Agrega los eventos para el canvas
 canvas.addEventListener('mousedown', startDrawing);
 canvas.addEventListener('mouseup', stopDrawing);
 canvas.addEventListener('mouseout', stopDrawing);
