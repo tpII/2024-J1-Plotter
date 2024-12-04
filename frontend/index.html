@@ -3,66 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Drawing Application</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Plotter - TP2 - UNLP</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
 </head>
-<body>
-  
-  
-  <nav class="bg-blue-500 p-4">
-    <div class="container mx-auto flex items-center justify-between">
+<body class="bg-gray-100">
+
+  <!-- Navbar -->
+  <nav class="bg-gray-800 p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
       <!-- Izquierda: Nombre del Proyecto -->
-      <div class="text-white text-lg font-bold">
-        Mi Proyecto
+      <div class="text-white text-xl font-bold">
+        Plotter 2D
       </div>
-  
-      <!-- Centro: Enlaces de Navegación -->
-      <div class="space-x-6">
-        <a href="#canvas-section" class="text-white hover:text-gray-200">Home</a>
-        <a href="#about-section" class="text-white hover:text-gray-200">About</a>
-        <a href="https://github.com" target="_blank" class="text-white hover:text-gray-200">Github</a>
+      
+      <!-- Centro: Links -->
+      <div class="hidden md:flex space-x-4">
+        <a href="#canvas-section" class="text-white hover:text-gray-300">Home</a>
+        <a href="#about-section" class="text-white hover:text-gray-300">About</a>
+          <a href="#gallery-section" class="text-white hover:text-gray-300">gallery</a>
       </div>
-  
-      <!-- Derecha: Botón de Iniciar/Cerrar Sesión -->
-      <div id="authButton">
-        <button
-          id="loginButton"
-          class="bg-white text-blue-500 font-semibold py-1 px-4 rounded-lg hover:bg-gray-200 transition duration-300"
-          onclick="handleAuth()"
-        >
-          Iniciar Sesión
-        </button>
-      </div>
+      
+      <!-- Derecha: Botón de Autenticación -->
+<!-- Derecha: Botón de Autenticación y GitHub Logo -->
+<div class="flex items-center space-x-4">
+
+  <!-- Botón de Autenticación -->
+  <button 
+    id="loginButton"
+    class="bg-gray-100 text-gray-900 font-bold px-4 py-2 rounded-lg shadow-md hover:bg-gray-200 transition duration-300"
+    onclick="handleAuth()">
+    Log in
+  </button> 
+
+    <!-- GitHub Logo -->
+    <a href="https://github.com/tpII/2024-J1-Plotter" target="_blank" class="text-white hover:text-gray-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2c-5.52 0-10 4.48-10 10 0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.61-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1.01.07 1.54 1.04 1.54 1.04.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.93 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.59 9.59 0 012.5-.34c.85.01 1.71.12 2.5.34 1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.83-2.34 4.68-4.57 4.93.36.31.68.92.68 1.86 0 1.34-.01 2.42-.01 2.75 0 .27.18.59.69.48C19.13 20.17 22 16.42 22 12c0-5.52-4.48-10-10-10z" />
+      </svg>
+    </a>
+</div>
     </div>
   </nav>
-  
-  
-  <div class="min-h-screen bg-gray-100">
-    <!-- Sección del Canvas -->
-    <section id="canvas-section" class="bg-white py-12 shadow-lg">
-      <div id="canvas-container" class="container mx-auto text-center">
-        <h2 class="text-3xl font-bold text-blue-500 mb-4">Dibuja Aquí</h2>
-        <p class="text-gray-700 mb-6">Usa el canvas para crear tus dibujos y envíalos al robot.</p>
-        <div class="flex justify-center">
-          <canvas id="drawCanvas" class="border border-gray-300 rounded-md" width="500" height="300"></canvas>
+  <section id="canvas-section" class="py-24 pb-40 h-full bg-gray-300 shadow-lg">
+    <div class="container mx-auto">
+      <!-- Drawing Window -->
+      <div class="bg-white rounded-lg shadow-lg max-w-4xl mx-auto">
+        <!-- Top Bar -->
+        <div class="bg-gray-700 text-white flex justify-between items-center px-4 py-2 rounded-t-lg">
+          <!-- Left: Mac-style Circles -->
+          <div class="flex space-x-2">
+            <span class="w-3 h-3 bg-red-600 rounded-full"></span>
+            <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+            <span class="w-3 h-3 bg-green-600 rounded-full"></span>
+          </div>
+          <!-- Center: Title -->
+          <span class="text-lg font-bold">Drawing Window</span>
+
+          <!-- Right: Erase Button -->
+          <button 
+            id="resetButton" 
+            class="flex items-center text-sm bg-white text-gray-500 font-semibold px-3 py-1 rounded-lg hover:bg-gray-200 transition duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16.446 3.414c-.783-.783-2.047-.783-2.829 0l-10.202 10.2c-.781.782-.781 2.047 0 2.828l5.656 5.656c.782.781 2.047.781 2.828 0l10.202-10.202c.782-.781.782-2.046 0-2.828l-5.655-5.654zm-1.414 1.414l5.656 5.656-3.536 3.535-5.656-5.656 3.536-3.535zm-4.95 4.95l5.656 5.656-3.535 3.535-5.656-5.656 3.535-3.535zm-8.486 5.656l3.535-3.535 5.656 5.656-3.535 3.535-5.656-5.656z"/>
+            </svg>
+            Erase
+          </button>
+        </div>
+        <!-- Canvas Area -->
+        <div class="p-4 flex justify-center">
+          <canvas 
+            id="drawCanvas" 
+            class="border border-gray-300 bg-gray-100 rounded-md" 
+            width="900"
+            height="600"
+            style="max-width: 100%; height: auto;">
+          </canvas>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
   
-    <!-- Sección About -->
-    <section id="about-section" class="py-12 bg-blue-500 text-white">
-      <div class="container mx-auto text-center">
-        <h2 class="text-3xl font-bold mb-4">Sobre Nosotros</h2>
-        <p class="text-lg">
-          Este proyecto combina tecnología avanzada con creatividad para permitirte dibujar en un canvas y enviar esos
-          dibujos directamente a un robot que los recrea en papel. ¡Ideal para proyectos educativos, creativos y tecnológicos!
-        </p>
+  
+  
+
+  <section id="about-section" class="py-12 bg-gray-500 text-white">
+    <div class="container mx-auto flex flex-wrap items-center space-y-8 lg:space-y-0 lg:flex-nowrap">
+      <!-- Texto -->
+      <div class="lg:w-1/2 text-left space-y-8">
+        <!-- Descripción general del proyecto -->
+        <div>
+          <h2 class="text-4xl font-bold mb-4">¿Qué es Plotter 2D?</h2>
+          <p class="text-lg leading-relaxed">
+            Plotter 2D es un sistema innovador que combina tecnología avanzada con creatividad. Este proyecto permite a los usuarios dibujar en un canvas digital interactivo a través de una aplicación web y, posteriormente, replica los dibujos en un plotter físico en tiempo real. Diseñado para educación, arte y prototipos tecnológicos, Plotter 2D simplifica la conexión entre el mundo digital y físico mediante herramientas modernas de la nube y protocolos de comunicación eficientes.
+          </p>
+        </div>
+  
+        <!-- Cómo funciona -->
+        <div>
+          <h2 class="text-4xl font-bold mb-4">¿Cómo funciona?</h2>
+          <p class="text-lg leading-relaxed">
+            Plotter 2D utiliza una arquitectura escalable basada en AWS para garantizar eficiencia y seguridad. Los usuarios dibujan en una app web, se autentican mediante Cognito y envían sus dibujos al backend, donde son procesados y transmitidos al plotter físico mediante AWS IoT Core y el protocolo MQTT.
+          </p>
+        </div>
       </div>
-    </section>
+  
+      <!-- Video -->
+      <div class="lg:w-1/2 flex justify-center">
+        <video 
+          class="max-w-full rounded-lg shadow-lg"
+          controls
+          muted
+          loop
+        >
+          <source src="/frontend/images/video.mp4" type="video/mp4">
+          Tu navegador no soporta la etiqueta de video.
+        </video>
+      </div>
+    </div>
+  </section>
+  <!-- Infrastructure Section -->
+<section id="infrastructure-section" class="py-12 bg-gray-100">
+  <div class="container mx-auto flex flex-wrap items-center space-y-8 lg:space-y-0 lg:flex-nowrap">
+    <!-- Image -->
+    <div class="lg:w-1/2 flex justify-center">
+      <img 
+        src="/frontend/images/diagram.png" 
+        alt="Infrastructure Diagram" 
+        class="max-w-full rounded-lg"
+      >
+    </div>
+
+    <!-- Text -->
+    <div class="lg:w-1/2 text-left pl-16 space-y-4">
+      <h2 class="text-4xl font-bold mb-4">Infraestructura</h2>
+      <p class="text-lg leading-relaxed text-gray-700">
+        La infraestructura de Plotter 2D está diseñada para aprovechar los servicios en la nube de AWS y garantizar un flujo de datos eficiente y seguro desde la aplicación web hasta el dispositivo físico. 
+        Los usuarios interactúan con la interfaz de usuario alojada en Amazon S3, accesible a través de Amazon CloudFront para una entrega rápida y segura. La autenticación se gestiona mediante Amazon Cognito, 
+        garantizando acceso protegido. El API Gateway recibe los datos de dibujo, que luego son procesados por funciones Lambda y enviados al dispositivo a través de AWS IoT Core utilizando el protocolo MQTT.
+      </p>
+    </div>
   </div>
-    
+</section>
+
+  <section id="gallery-section" class="py-12 bg-gray-400">
+    <div class="container mx-auto text-center">
+      <!-- Section Title -->
+      <h2 class="text-4xl font-bold text-white mb-8">Galería</h2>
+  
+      <!-- Image Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Image 1 -->
+        <div class="overflow-hidden rounded-lg shadow-lg">
+          <img 
+            src="/frontend/images/ga1.jpeg" 
+            alt="Galería Imagen 1" 
+            class="w-full h-56 object-cover transform hover:scale-105 transition duration-300"
+          >
+        </div>
+        <!-- Image 2 -->
+        <div class="overflow-hidden rounded-lg shadow-lg">
+          <img 
+            src="/frontend/images/ga2.jpeg" 
+            alt="Galería Imagen 2" 
+            class="w-full h-56 object-cover transform hover:scale-105 transition duration-300"
+          >
+        </div>
+        <!-- Image 3 -->
+        <div class="overflow-hidden rounded-lg shadow-lg">
+          <img 
+            src="/frontend/images/ga1.jpeg" 
+            alt="Galería Imagen 3" 
+            class="w-full h-56 object-cover transform hover:scale-105 transition duration-300"
+          >
+        </div>
+        <!-- Image 4 -->
+        <div class="overflow-hidden rounded-lg shadow-lg">
+          <img 
+            src="/frontend/images/ga1.jpeg" 
+            alt="Galería Imagen 4" 
+            class="w-full h-56 object-cover transform hover:scale-105 transition duration-300"
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <footer class="bg-gray-800 py-4 text-white">
+    <div class="container mx-auto flex flex-col sm:flex-row items-center justify-between">
+      <!-- Left: Project Name -->
+      <p class="text-sm text-center sm:text-left">
+        © 2024 Plotter 2D - Todos los derechos reservados
+      </p>
+  
+      <!-- Right: Social Media Links -->
+      <div class="flex space-x-4 mt-2 sm:mt-0">
+        <a href="https://github.com/tpII/2024-J1-Plotter" target="_blank" class="hover:text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2c-5.52 0-10 4.48-10 10 0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.61-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1.01.07 1.54 1.04 1.54 1.04.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.93 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.59 9.59 0 012.5-.34c.85.01 1.71.12 2.5.34 1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.83-2.34 4.68-4.57 4.93.36.31.68.92.68 1.86 0 1.34-.01 2.42-.01 2.75 0 .27.18.59.69.48C19.13 20.17 22 16.42 22 12c0-5.52-4.48-10-10-10z" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </footer>
+  
   <script src="js/app.js"></script>
 </body>
 </html>
