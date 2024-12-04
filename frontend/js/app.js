@@ -163,12 +163,19 @@ function draw(event) {
 }
 
 // Función para obtener la posición del mouse relativa al canvas (ajustado para offset y scroll)
+// Función para obtener la posición del mouse relativa al canvas
 function getMousePosition(event) {
-  const rect = canvas.getBoundingClientRect();
-  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  return [event.clientX - rect.left - scrollLeft, event.clientY - rect.top - scrollTop];
+  const rect = canvas.getBoundingClientRect(); // Obtiene el tamaño y la posición del canvas en la ventana
+  const scaleX = canvas.width / rect.width; // Escala horizontal del canvas
+  const scaleY = canvas.height / rect.height; // Escala vertical del canvas
+
+  // Ajusta la posición del mouse considerando el scroll y el escalado
+  const mouseX = (event.clientX - rect.left) * scaleX;
+  const mouseY = (event.clientY - rect.top) * scaleY;
+
+  return [mouseX, mouseY];
 }
+
 
 // Función para enviar los trazos completados al API Gateway
 async function sendStroke(stroke) {
