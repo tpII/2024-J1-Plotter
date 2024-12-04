@@ -1,6 +1,8 @@
 const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/';
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
+const overlayMessage = document.createElement('div'); // Overlay message
+const resetButton = document.getElementById('resetButton');
 
 let drawing = false;
 let strokeBuffer = [];
@@ -12,7 +14,7 @@ const cognitoLogoutUrl = "https://plotter.auth.us-east-1.amazoncognito.com/logou
 let idToken = null;
 
 // Modo de desarrollo
-const isDevelopment = true;
+const isDevelopment = false;
 
 // Maneja login y logout según el estado del usuario
 function handleAuth() {
@@ -21,6 +23,7 @@ function handleAuth() {
       console.log("Simulando cierre de sesión en desarrollo");
       idToken = null;
       updateAuthButton();
+      checkCanvasState();
     } else {
       window.location.href = cognitoLogoutUrl;
     }
@@ -29,6 +32,7 @@ function handleAuth() {
       console.log("Simulando inicio de sesión en desarrollo");
       idToken = "fake-development-token";
       updateAuthButton();
+      checkCanvasState();
     } else {
       window.location.href = cognitoLoginUrl;
     }
@@ -62,8 +66,59 @@ if (!isDevelopment) {
 
 updateAuthButton(); // Actualiza el botón al cargar la página
 
+// Revisa el estado del canvas según la autenticación
+function checkCanvasState() {
+  if (!idToken) {
+    overlayMessage.style.display = 'flex';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.opacity = '0.5';
+  } else {
+    overlayMessage.style.display = 'none';
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.opacity = '1';
+  }
+}
+
+// Inicializa el mensaje de overlay sobre el canvas
+function setupCanvasOverlay() {
+  overlayMessage.textContent = "Antes de dibujar debes iniciar sesión";
+  overlayMessage.style.position = 'absolute';
+  overlayMessage.style.top = '50%';
+  overlayMessage.style.left = '50%';
+  overlayMessage.style.transform = 'translate(-50%, -50%)';
+  overlayMessage.style.background = 'rgba(0, 0, 0, 0.7)';
+  overlayMessage.style.color = 'white';
+  overlayMessage.style.fontSize = '1.5rem';
+  overlayMessage.style.fontWeight = 'bold';
+  overlayMessage.style.padding = '1rem 2rem';
+  overlayMessage.style.borderRadius = '8px';
+  overlayMessage.style.display = 'none';
+  overlayMessage.style.zIndex = '10';
+
+  const canvasContainer = canvas.parentElement;
+  canvasContainer.style.position = 'relative';
+  canvasContainer.appendChild(overlayMessage);
+
+  checkCanvasState();
+}
+
+// Limpia el contenido del canvas
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Maneja el clic en el botón "Erase"
+resetButton.addEventListener('click', () => {
+  if (!idToken) {
+    alert("Debes iniciar sesión para borrar el canvas.");
+    return;
+  }
+  clearCanvas();
+});
+
 // Función para iniciar el dibujo
 function startDrawing(event) {
+  if (!idToken) return; // Desactiva si no hay sesión
   drawing = true;
   strokeBuffer = [];
   const [mouseX, mouseY] = getMousePosition(event);
@@ -129,3 +184,6 @@ canvas.addEventListener('mousedown', startDrawing);
 canvas.addEventListener('mouseup', stopDrawing);
 canvas.addEventListener('mouseout', stopDrawing);
 canvas.addEventListener('mousemove', draw);
+
+// Configuración inicial
+setupCanvasOverlay();
