@@ -7,6 +7,7 @@ static int target_pos_y = 0;
 
 static bool initialized_flag = false;
 static bool currently_moving = false;
+static int wait_timer = 0;
 
 static bool check_valid_coords(int coord_x, int coord_y); //Chequea que las coordenadas se encuentren en el rango posible de graficar
 
@@ -51,6 +52,9 @@ bool ARM_line_to(int target_x, int target_y)
     //Solo se mueve si las coordenadas de destino se encuentran dentro del area de dibujo
     if (check_valid_coords(target_x, target_y))
     {
+      if (target_pos_x == target_x && target_pos_y == target_y) //Si ya esta en esa posicion, devuelve 'true'
+        return true;
+
       target_pos_x = target_x;
       target_pos_y = target_y;
       currently_moving = true;
@@ -59,6 +63,15 @@ bool ARM_line_to(int target_x, int target_y)
   }
   else
     return false; //Devuelve 'false' si aun no puede procesar la instruccion
+}
+
+void ARM_lift(bool lift) //Controla la posicion vertical del brazo
+{
+  if (initialized_flag)
+  {
+    SERVO_lift(lift);
+    wait_timer = wait_timer + (WAIT_CYCLES*10);
+  }
 }
 
 //Desplaza el brazo una cierta cantidad de unidades en (x,y)
@@ -82,7 +95,6 @@ void ARM_shift_by(int shift_x, int shift_y)
 //Actualiza la posicion del brazo si su posicion actual no es la deseada, y espera a que se muevan los servos.
 void ARM_update()
 {
-  static int wait_timer = 0;
   //int shift_x = 0;
   //int shift_y = 0;
 

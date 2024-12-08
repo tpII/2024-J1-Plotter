@@ -40,17 +40,21 @@ void SCHEDULER_dispatch_tasks()
 {
   if (flag_arm) 
   {
+    DRAWING_MODULE_update();
     ARM_update();
+    flag_arm = 0;
   } 
 
   if (flag_wifi_server)
   {
     WEB_SERVER_update();
+    flag_wifi_server = 0;
   }
 
   if (flag_joystick)
   {
     JOYSTICK_update();
+    flag_joystick = 0;
   }
 
   if (flag_LED)    

@@ -5,8 +5,8 @@
 #include <ESP32Servo.h>
 
 //Longitud de cada brazo
-#define ARM_LENGTH_A 900  //Brazo conectado al servo alpha
-#define ARM_LENGTH_B 900 //Brazo conectado al servo beta
+#define ARM_LENGTH_A 90  //Brazo conectado al servo alpha
+#define ARM_LENGTH_B 90 //Brazo conectado al servo beta
 
 //ESP32 PWM Pins: 0-19, 21-23, 25-27, 32-39
 #define SERVO_ALPHA_PIN 18
