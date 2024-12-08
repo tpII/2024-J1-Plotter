@@ -56,7 +56,7 @@ void DRAWING_MODULE_start() //Comienza a dibujar desde la linea 0
     current_index = -2;
 
     ARM_lift(1);
-    ARM_line_to(lines[0].startX, lines[0].startY);
+    ARM_move_to(lines[0].startX, lines[0].startY);
 
     Serial.println("Dibujo iniciado");
   }
@@ -75,6 +75,8 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
   static int current_x = 0;
   static int current_y = 0;
 
+  double delta_x, delta_y, remaining_x, remaining_y;
+
   if (flag_drawing)
   {
     if (current_index == -2) //Indica que empieza el dibujo
@@ -88,7 +90,7 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
     }
     else
     {
-      if (ARM_line_to(current_x, current_y))
+      if (ARM_move_to(current_x, current_y))
       {
         //Si llega al final de la linea
         if (current_x == lines[current_index].endX && current_y == lines[current_index].endY)
@@ -104,8 +106,8 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
           }
 
           //Si la siguiente linea NO empieza donde termina la anterior, se levanta y se mueve
-          if (!(lines[current_index-1].endX == lines[current_x].startX) ||
-              !(lines[current_index-1].endY == lines[current_x].startY))
+          if (!(lines[current_index-1].endX == lines[current_index].startX) ||
+              !(lines[current_index-1].endY == lines[current_index].startY))
           {
             ARM_lift(1);
             current_x = lines[current_index].startX;
@@ -115,13 +117,45 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
         else //Si aun no llega al final
         {
           //Serial.println("Dibujo Avance");
+          //Avanza una unidad hacia el final de la linea dependiendo del progreso restante de cada eje
 
-          //Avanza una unidad hacia el final de la linea
-          if (current_x < lines[current_index].endX) current_x++;
-          else if (current_x > lines[current_index].endX) current_x--;
+          delta_x = abs(lines[current_index].endX - lines[current_index].startX);
+          delta_y = abs(lines[current_index].endY - lines[current_index].startY);
+          if (delta_x != 0)
+          {
+            remaining_x = abs(lines[current_index].endX - current_x)/delta_x;
+          }
+          else remaining_x = -1;
 
-          if (current_y < lines[current_index].endY) current_y++;
-          else if (current_y > lines[current_index].endY) current_y--;
+          if (delta_y != 0)
+          {
+            remaining_y = abs(lines[current_index].endY - current_y)/delta_y;
+          }
+          else remaining_y = -1;
+
+          if (remaining_x > remaining_y)
+          {
+            if (current_x < lines[current_index].endX) current_x++;
+            else if (current_x > lines[current_index].endX) current_x--;
+          }
+          else
+          {
+            if (remaining_x < remaining_y)
+            {
+              if (current_y < lines[current_index].endY) current_y++;
+              else if (current_y > lines[current_index].endY) current_y--;
+            }
+            else
+            {
+              if (current_x < lines[current_index].endX) current_x++;
+              else if (current_x > lines[current_index].endX) current_x--;
+
+              if (current_y < lines[current_index].endY) current_y++;
+              else if (current_y > lines[current_index].endY) current_y--;
+            }
+          }
+          
+
         }
       }
     }

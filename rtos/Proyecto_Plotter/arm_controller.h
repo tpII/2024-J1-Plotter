@@ -25,7 +25,7 @@ void ARM_init();
 void ARM_update(); //Actualiza la posicion del brazo si su posicion actual no es la deseada, y espera a que se muevan los servos.
 
 void ARM_shift_by(int shift_x, int shift_y); //Desplaza el brazo una cierta cantidad de unidades en (x,y)
-bool ARM_line_to(int target_x, int target_y); //Mueve el brazo en linea recta hacia las coordenadas recibidas (Devuelve 'false' si aun no puede procesar la instruccion)
+bool ARM_move_to(int target_x, int target_y); //Mueve el brazo hacia las coordenadas recibidas (Devuelve 'false' si aun no puede procesar la instruccion)
 void ARM_lift(bool lift); //Controla la posicion vertical del brazo
 
 

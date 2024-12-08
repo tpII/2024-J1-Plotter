@@ -43,8 +43,8 @@ static bool check_valid_coords(int coord_x, int coord_y)
     return false;
 }
 
-// Mueve el brazo en linea recta hacia las coordenadas recibidas (Devuelve 'false' si aun no puede procesar la instruccion)
-bool ARM_line_to(int target_x, int target_y)
+// Mueve el brazo hacia las coordenadas recibidas (Devuelve 'false' si aun no puede procesar la instruccion)
+bool ARM_move_to(int target_x, int target_y)
 {
   //Solo acepta la siguiente linea si no se esta moviendo
   if (!currently_moving)

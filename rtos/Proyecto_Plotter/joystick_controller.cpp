@@ -72,7 +72,7 @@ void JOYSTICK_update()
       if (!stick_button_state)
       {
         Serial.println("Stick Presionado");
-        ARM_line_to(STARTING_X, STARTING_Y);
+        ARM_move_to(STARTING_X, STARTING_Y);
       }
   }
 }
