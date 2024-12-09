@@ -18,15 +18,13 @@
 #define STARTING_X RANGE_X-MIN_X
 #define STARTING_Y RANGE_Y
 
-// Ciclos del scheduler que espera el brazo a que se terminen de mover los servos
-#define WAIT_CYCLES 2
-
 void ARM_init();
 void ARM_update(); //Actualiza la posicion del brazo si su posicion actual no es la deseada, y espera a que se muevan los servos.
 
 void ARM_shift_by(int shift_x, int shift_y); //Desplaza el brazo una cierta cantidad de unidades en (x,y)
-bool ARM_move_to(int target_x, int target_y); //Mueve el brazo hacia las coordenadas recibidas (Devuelve 'false' si aun no puede procesar la instruccion)
+bool ARM_move_to(int target_x, int target_y, bool instant_move); //Mueve el brazo hacia las coordenadas recibidas (Devuelve 'false' si aun no puede procesar la instruccion)
 void ARM_lift(bool lift); //Controla la posicion vertical del brazo
+bool ARM_is_lifted(); //Devuelve true si el brazo se encuentra elevado
 
 
 #endif

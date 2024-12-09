@@ -56,7 +56,7 @@ void DRAWING_MODULE_start() //Comienza a dibujar desde la linea 0
     current_index = -2;
 
     ARM_lift(1);
-    ARM_move_to(lines[0].startX, lines[0].startY);
+    ARM_move_to(lines[0].startX, lines[0].startY, true);
 
     Serial.println("Dibujo iniciado");
   }
@@ -79,28 +79,25 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
 
   if (flag_drawing)
   {
+    if (ARM_is_lifted()) ARM_lift(0);
+
     if (current_index == -2) //Indica que empieza el dibujo
     {
       current_index = 0;
-      ARM_lift(0);
       current_x = lines[current_index].startX;
       current_y = lines[current_index].startY;
-
-      //Serial.println("Dibujo posicion inicial");
     }
     else
     {
-      if (ARM_move_to(current_x, current_y))
+      if (ARM_move_to(current_x, current_y, false))
       {
         //Si llega al final de la linea
         if (current_x == lines[current_index].endX && current_y == lines[current_index].endY)
         {
-          //Serial.println("Dibujo final de linea");
           current_index++;
           //Si llega al final del dibujo
           if (current_index > final_index) 
           {
-            //Serial.println("Dibujo final dibujo");
             flag_drawing = 0;
             return;
           }
@@ -112,13 +109,12 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
             ARM_lift(1);
             current_x = lines[current_index].startX;
             current_y = lines[current_index].startY;
+            ARM_move_to(current_x, current_y, true);
           }
         }
         else //Si aun no llega al final
         {
-          //Serial.println("Dibujo Avance");
-          //Avanza una unidad hacia el final de la linea dependiendo del progreso restante de cada eje
-
+          //Avanza n unidades hacia el final de la linea dependiendo del progreso restante de cada eje
           delta_x = abs(lines[current_index].endX - lines[current_index].startX);
           delta_y = abs(lines[current_index].endY - lines[current_index].startY);
           if (delta_x != 0)

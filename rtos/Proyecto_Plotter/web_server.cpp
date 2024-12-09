@@ -27,7 +27,7 @@ static void executeFunction1()
 {
   //Volver a la posicion inicial
   DRAWING_MODULE_stop();
-  ARM_move_to(STARTING_X, STARTING_Y);
+  ARM_move_to(STARTING_X, STARTING_Y, true);
 }
 
 static void executeFunction2() 
