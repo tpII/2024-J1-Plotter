@@ -1,5 +1,4 @@
-#include "web_server.h"
-
+#include "headers/web_server.h"
 
 // Datos de la red
 const char *ssid_server = "ESP32-Access-Point";
@@ -126,7 +125,6 @@ static void handleButton9()
   executeFunction9();
   //server.send(200, "text/plain", "Extra");
 }
-
 
 void WEB_SERVER_init() 
 {
@@ -295,7 +293,6 @@ static void PREMADE_drawExtra()
     DRAWING_MODULE_add_line(65, 85, 70, 75);
     DRAWING_MODULE_add_line(70, 75, 75, 85);
     DRAWING_MODULE_add_line(75, 85, 80, 75);
-
 }
 
 

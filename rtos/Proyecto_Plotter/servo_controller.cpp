@@ -1,4 +1,4 @@
-#include "servo_controller.h"
+#include "headers/servo_controller.h"
 
 #define SERVO_ALPHA_ID 0
 #define SERVO_BETA_ID 1
