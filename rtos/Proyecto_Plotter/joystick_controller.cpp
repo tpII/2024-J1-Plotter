@@ -41,28 +41,28 @@ void JOYSTICK_update()
       
       if (x_reading > X_STANDBY + 3*DEADZONE)
       {
-        Serial.println("Moviendo X+");
+        //Serial.println("Moviendo X+");
         shift_x = 1;
         shift = true;
       }
 
       if (x_reading < X_STANDBY - 2*DEADZONE)
       {
-        Serial.println("Moviendo X-");
+        //Serial.println("Moviendo X-");
         shift_x = -1;
         shift = true;
       }
 
       if (y_reading > Y_STANDBY + 2*DEADZONE)
       {
-        Serial.println("Moviendo Y-");
+        //Serial.println("Moviendo Y-");
         shift_y = -1;
         shift = true;
       }
 
       if (y_reading < Y_STANDBY - 4*DEADZONE)
       {
-        Serial.println("Moviendo Y+");
+        //Serial.println("Moviendo Y+");
         shift_y = 1;
         shift = true;
       }
@@ -71,7 +71,7 @@ void JOYSTICK_update()
 
       if (!stick_button_state)
       {
-        Serial.println("Stick Presionado");
+        //Serial.println("Stick Presionado");
         ARM_move_to(STARTING_X, STARTING_Y, true);
       }
   }

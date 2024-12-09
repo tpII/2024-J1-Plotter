@@ -64,7 +64,7 @@ static void executeFunction8()
 }
 static void executeFunction9() 
 {
-  PREMADE_drawCharacter();
+  //PREMADE_drawExtra();
 }
 
 
@@ -78,21 +78,21 @@ static void handleRoot()
 static void handleButton1() 
 {
   executeFunction1();
-  server.send(200, "text/plain", "Posicion Inicial");
+  //server.send(200, "text/plain", "Posicion Inicial");
 }
 
 // Handle button 2
 static void handleButton2() 
 {
   executeFunction2();
-  server.send(200, "text/plain", "Dibujo Iniciado");
+  //server.send(200, "text/plain", "Dibujo Iniciado");
 }
 
 // Handle button 3
 static void handleButton3() 
 {
   executeFunction3();
-  server.send(200, "text/plain", "Dibujo Detenido");
+  //server.send(200, "text/plain", "Dibujo Detenido");
 }
 
 // Handle button 4
@@ -124,7 +124,7 @@ static void handleButton8()
 static void handleButton9() 
 {
   executeFunction9();
-  server.send(200, "text/plain", "Character Configurado");
+  //server.send(200, "text/plain", "Extra");
 }
 
 
@@ -263,7 +263,7 @@ static void PREMADE_drawStar()
     }
 }
 
-static void PREMADE_drawCharacter() 
+static void PREMADE_drawExtra()
 {
     DRAWING_MODULE_reset();
 

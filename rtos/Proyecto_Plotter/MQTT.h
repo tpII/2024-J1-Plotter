@@ -1,0 +1,98 @@
+
+#ifndef _MQTT_H_
+#define _MQTT_H_
+
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <WiFiClientSecure.h>  
+
+// Datos Wi-Fi
+static const char* ssid = "";
+static const char* password = "";
+
+// Datos MQTT 
+static const char* mqttServer = "a8qpa2kd8arw9-ats.iot.us-east-1.amazonaws.com";
+static const int mqttPort = 8883;
+static const char* thingName = "robot-drawing-device";
+static const char* mqttTopic = "robot/draw";
+
+// Claves MQTT
+
+// Certificado CA1
+static const char *ca_cert = 
+"-----BEGIN CERTIFICATE-----\n"
+"MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF\n"
+"ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6\n"
+"b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL\n"
+"MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv\n"
+"b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj\n"
+"ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM\n"
+"9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw\n"
+"IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6\n"
+"VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L\n"
+"93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm\n"
+"jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC\n"
+"AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA\n"
+"A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI\n"
+"U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs\n"
+"N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv\n"
+"o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU\n"
+"5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy\n"
+"rqXRfboQnoZsG4q5WTP468SQvvG5\n"
+"-----END CERTIFICATE-----\n";
+
+static const char* client_cert = 
+"-----BEGIN CERTIFICATE-----\n"
+"MIIDWTCCAkGgAwIBAgIUMUFSTcOi73MqBNmBp7BBlTIdko0wDQYJKoZIhvcNAQEL\n"
+"BQAwTTFLMEkGA1UECwxCQW1hem9uIFdlYiBTZXJ2aWNlcyBPPUFtYXpvbi5jb20g\n"
+"SW5jLiBMPVNlYXR0bGUgU1Q9V2FzaGluZ3RvbiBDPVVTMB4XDTI0MTIwODIzNTE1\n"
+"M1oXDTQ5MTIzMTIzNTk1OVowHjEcMBoGA1UEAwwTQVdTIElvVCBDZXJ0aWZpY2F0\n"
+"ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAN2mNLQ5jMSh9O4+5oyN\n"
+"/lXYNOB+wLrPzUMswL52vN2GQXmBhPSTGRrV6cNPJ18cwW2ja+O7QscKpYxrOvD0\n"
+"NA23Hb3JcioUtV6bzJkH+0BANlHs0Zh0r6PCetnraUls2mZooJugUZjyYERFinqX\n"
+"FcX0OglDuZYfO1cDme2qPyOHYgepnGJr5WgyDO0MPvEwhzfUPaISkC26E6br1eF+\n"
+"MdTjElMNi2Z7YmHxeUBZvgoyK3sytPuVWUUh6d7acN+FOtsbCqAjgrNTEs9+cObN\n"
+"4avmrnaRcoM/fxQDyOhu/0e1hPu40ghs4zacAXdlo/5kM1vNbxl8siVscmIBQVjk\n"
+"s+ECAwEAAaNgMF4wHwYDVR0jBBgwFoAU0NNLGaGWYskbOw3aGbLSzBo04BEwHQYD\n"
+"VR0OBBYEFINqvC3O4HN+03v262/BkbCy9Kd8MAwGA1UdEwEB/wQCMAAwDgYDVR0P\n"
+"AQH/BAQDAgeAMA0GCSqGSIb3DQEBCwUAA4IBAQCPVjDPyYe38oAgQRxZW+1GNAGo\n"
+"Wcf5q8QqTlrXs7PyAi0xcKwvE29Py+bXKvc/fZCCX7+qT7B5tbg/mRl6QeFlWqHR\n"
+"qm2ikAWVV09rYO6hTPxrIuNBVFEqDq8xLaVDy+3FvLLSYogfr5Hr0xk6XOtqOHAs\n"
+"y1ntvg/CFycsPWnWfjougMWPKABo5xXsl9LU9jH8T1W4HA0moscHsgsVWO+GD2nn\n"
+"SPU7TgZ30InPSRAupE3ST+wjV18hsMZWH/3JfsTLcfmLJHGTFQ5C38p6wQlz11XK\n"
+"iUcr38g3jm8yyvn2Bn+l7HpFWXOMEokxND+It7jJq4wHU3HpOKbuG9+MOGes\n"
+"-----END CERTIFICATE-----\n";
+
+static const char* client_key = 
+"-----BEGIN RSA PRIVATE KEY-----\n"
+"MIIEpAIBAAKCAQEA3aY0tDmMxKH07j7mjI3+Vdg04H7Aus/NQyzAvna83YZBeYGE\n"
+"9JMZGtXpw08nXxzBbaNr47tCxwqljGs68PQ0DbcdvclyKhS1XpvMmQf7QEA2UezR\n"
+"mHSvo8J62etpSWzaZmigm6BRmPJgREWKepcVxfQ6CUO5lh87VwOZ7ao/I4diB6mc\n"
+"YmvlaDIM7Qw+8TCHN9Q9ohKQLboTpuvV4X4x1OMSUw2LZntiYfF5QFm+CjIrezK0\n"
+"+5VZRSHp3tpw34U62xsKoCOCs1MSz35w5s3hq+audpFygz9/FAPI6G7/R7WE+7jS\n"
+"CGzjNpwBd2Wj/mQzW81vGXyyJWxyYgFBWOSz4QIDAQABAoIBAQDHlbMdmjjEkuWf\n"
+"ZqppZC7iE/bBM8HONfIqC/FfUEIO46avh842AQL5JCgDw5G7VoRiemZbQTMHUfHy\n"
+"OFhxwiPhOcOhMvUHKXCLyZT5M7OtjmSbbrjpJCFIP4YqFo3PHSKoVoxQtpLjO1Uu\n"
+"BMSGUOe9QYbE8uP5ZxQi7U49MTD7hm7jtBasj1Utd/b/sqN0GGq1c0bh8T2pRuoL\n"
+"revtN/g6n84oUZ05GAyR1SgKTmZRxyffYwT80YOd/X6pGCF0m24wmp4VASYBBXDg\n"
+"qU+qw03DGeyTQDv1X3YsmiZvpALrT2tYtPLnLc7nPL1T/jxu6vmLOf8CwT2XEydP\n"
+"SO0vq1gBAoGBAO7EEROaMGQU4TaBPDuWVA8NbuJPrOm9eYcnk3AjucLT4qWxv4nx\n"
+"hCU4be255njiu7Q4fA3BOKCEBEnulAtuJYSTzZVmWldgf41d97aC55qp0AECQb+J\n"
+"J6zDXJey0/7HlVmmG7RuWLoNW9l9s+zCIvVlQlBKd+CFrMAxrmPpyePBAoGBAO2l\n"
+"20lGZBNXCGhpBTs62N2HTbM0e0OQXTM4/KrOcFWtCfthioF8gigybf+joD1gE4et\n"
+"fF7GYx9rljFsvhjvKOkdn6bhY4rPu8Vgeh2zS1IduAXwzydfSwZ2Ure4Mgy00Fnf\n"
+"SvJIInnV0aI/h5d3oubsi9kdcMp0y3akokQklFghAoGAfILCZPaDRa2dxE6gmnJK\n"
+"Y48dw+bIxRuJxHFe8Zuvw2m7R6zptYW846wJp27KQT/7on/SMVoRraMqmWNQ0KUf\n"
+"64MoMkCt2+L2oUHfa83X+U+UqPIEV12u0ukN4A3hf3uU5qs4x17D5kIRI9npeg3D\n"
+"LTUg3731xZ/v9knyJyhDoAECgYAR1HDIZZyaitwZoU+AKyEcNcuRl21sG0ey0SK7\n"
+"2fM5qlrmXmIa5vGI/IeeN3ONR0kP0+dR4QaM0/CX0rXMfx0NqGhTB/QE9SL8Ywmm\n"
+"cs5C4fHtmCyiopapbHU2TX6Lz4EWTRd9aAYWKAGrb6LHrXUuaC7x4jCVMAAX7bAy\n"
+"9p+eoQKBgQDg+0s88Za7dScTYl+ZO+idoMKRzN+fP6SivZzB+fX0OF/+PHLq5wNd\n"
+"QXaX4eLUFfxGO7v8P73buDlR8tU3uFuq23B1sX5vl/nJ6RPduZSieGDGhaz5RiCZ\n"
+"//ah6X90EtSH2ElWI42HVSj4VZZ9RUMlapw2a8xP8FNSSLBYYyTVxA==\n"
+"-----END RSA PRIVATE KEY-----\n";
+
+void MQTT_init();
+void MQTT_update();
+
+#endif

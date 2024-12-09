@@ -1,5 +1,10 @@
 #include "drawing_module.h"
 
+//Constantes usadas para determinar el estado del controlador
+#define DRAWER_PRIMERA_LINEA -2
+#define DRAWER_STANDBY -1
+#define DRAWER_EMPTY -1
+
 typedef struct 
 {
     short startX; 
@@ -9,10 +14,10 @@ typedef struct
 } Line;
 
 static Line lines[MAX_LINES];
-static int final_index = -1; //Indice de la ultima linea introducida
-static int current_index = -1; // '-1' si no esta dibujando, '-2' si comienza el dibujo
+static int final_index = DRAWER_EMPTY; //Indice de la ultima linea introducida
+static int current_index = DRAWER_STANDBY; // '-1' si no esta dibujando, '-2' si comienza el dibujo
 
-static bool flag_drawing = 0; //Indica si esta dibujando
+static bool flag_drawing = false; //Indica si esta dibujando
 
 void DRAWING_MODULE_init()
 {
@@ -35,8 +40,6 @@ int DRAWING_MODULE_add_line(int startX, int startY, int endX, int endY) //Agrega
       lines[final_index].endX = endX;
       lines[final_index].startY = startY;
       lines[final_index].endY = endY;
-
-      //Serial.println("Linea agregada");
     }
   }
   return 0;
@@ -44,29 +47,26 @@ int DRAWING_MODULE_add_line(int startX, int startY, int endX, int endY) //Agrega
 
 void DRAWING_MODULE_reset() //Elimina todas las lineas de la lista
 {
-  final_index = -1;
-  //Serial.println("Lista reset");
+  final_index = DRAWER_EMPTY;
 }
 
 void DRAWING_MODULE_start() //Comienza a dibujar desde la linea 0
 {
   if (!flag_drawing && final_index >= 0)
   {
-    flag_drawing = 1;
-    current_index = -2;
+    flag_drawing = true;
+    current_index = DRAWER_PRIMERA_LINEA;
 
-    ARM_lift(1);
+    ARM_lift(true);
     ARM_move_to(lines[0].startX, lines[0].startY, true);
-
-    Serial.println("Dibujo iniciado");
   }
 }
 
 
 void DRAWING_MODULE_stop() //Detiene el dibujo antes de terminarlo
 {
-  flag_drawing = 0;
-  current_index = -1;
+  flag_drawing = false;
+  current_index = DRAWER_STANDBY;
 }
 
 
@@ -81,7 +81,7 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
   {
     if (ARM_is_lifted()) ARM_lift(0);
 
-    if (current_index == -2) //Indica que empieza el dibujo
+    if (current_index == DRAWER_PRIMERA_LINEA) //Indica que empieza el dibujo
     {
       current_index = 0;
       current_x = lines[current_index].startX;
@@ -98,7 +98,7 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
           //Si llega al final del dibujo
           if (current_index > final_index) 
           {
-            flag_drawing = 0;
+            flag_drawing = false;
             return;
           }
 
