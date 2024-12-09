@@ -1,8 +1,9 @@
 #include "web_server.h"
 
+
 // Datos de la red
-const char *ssid = "ESP32-Access-Point";
-const char *password = "12345678";
+const char *ssid_server = "ESP32-Access-Point";
+const char *password_server = "12345678";
 
 WebServer server(80);
 static bool server_initialized = false;
@@ -129,7 +130,7 @@ static void handleButton9()
 
 void WEB_SERVER_init() 
 {
-  WiFi.softAP(ssid, password);
+  WiFi.softAP(ssid_server, password_server);
   Serial.print("IP: ");
   Serial.println(WiFi.softAPIP());
 
@@ -296,3 +297,5 @@ static void PREMADE_drawCharacter()
     DRAWING_MODULE_add_line(75, 85, 80, 75);
 
 }
+
+

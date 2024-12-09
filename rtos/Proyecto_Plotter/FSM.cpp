@@ -42,7 +42,7 @@ void MEF_Update()
         //Acciones de inicio
         new_state= 0;
       }
-      ARM_update();
+      //ARM_update();
       if (!flag_drawing)
       {
         state= STANDBY;
@@ -56,7 +56,7 @@ void MEF_Update()
         //Acciones de inicio
         new_state= 0;
       }
-      JOYSTICK_update();
+      //JOYSTICK_update();
       if (!flag_manual)
       {
         state = STANDBY;

@@ -2,10 +2,10 @@
 
 typedef struct 
 {
-    int startX; 
-    int startY; 
-    int endX;   
-    int endY;   
+    short startX; 
+    short startY; 
+    short endX;   
+    short endY;   
 } Line;
 
 static Line lines[MAX_LINES];
@@ -16,7 +16,7 @@ static bool flag_drawing = 0; //Indica si esta dibujando
 
 void DRAWING_MODULE_init()
 {
- //??
+  ARM_init();
 }
 
 int DRAWING_MODULE_add_line(int startX, int startY, int endX, int endY) //Agrega la linea a la lista (coords de inicio y fin)
@@ -39,7 +39,7 @@ int DRAWING_MODULE_add_line(int startX, int startY, int endX, int endY) //Agrega
       //Serial.println("Linea agregada");
     }
   }
-    return 0;
+  return 0;
 }
 
 void DRAWING_MODULE_reset() //Elimina todas las lineas de la lista

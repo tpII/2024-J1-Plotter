@@ -4,7 +4,7 @@
 
 #include "arm_controller.h"
 
-#define MAX_LINES 1000 //Cantidad maxima de lineas guardadas en el arreglo
+#define MAX_LINES 8000 //Cantidad maxima de lineas guardadas en el arreglo
 
 void DRAWING_MODULE_init(); //Inicializa el modulo
 
