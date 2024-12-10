@@ -4,10 +4,8 @@ Ticker msTicker;
 
 // Flags utilizadas por el scheduler
 volatile bool flag_LED = false;
-volatile bool flag_arm = false;
-volatile bool flag_wifi_server = false;
-volatile bool flag_joystick = false;
-volatile bool flag_servos = false; 
+volatile bool flag_wifi = false;
+volatile bool flag_FSM = false;
 
 // Funcion del TICK
 void onTick() 
@@ -15,17 +13,14 @@ void onTick()
   static uint8_t counter = 0;
   counter++;
 
-  flag_arm = true; //cada 10ms
-
-  if (counter % 3 == 0) // cada 30ms
+  if (counter % 2 == 0) // cada 20ms
   {
-    flag_servos = true; 
+    flag_FSM = true; 
   }
 
   if (counter % 10 == 0) //cada 100ms
   {
-    flag_wifi_server = true;
-    flag_joystick = true;
+    flag_wifi = true;
   }
 
   if (counter >= 100) //cada 1sec
@@ -44,30 +39,17 @@ void SCHEDULER_init()
 //Ejecuta funciones en funcion al estado de los flags
 void SCHEDULER_dispatch_tasks() 
 {
-  if (flag_servos) 
+  if (flag_FSM) 
   {
-    SERVO_update();
-    flag_servos = 0;
+    FSM_update();
+    flag_FSM = 0;
   } 
 
-  if (flag_arm) 
-  {
-    ARM_update();
-    DRAWING_MODULE_update();
-    flag_arm = 0;
-  } 
-
-  if (flag_wifi_server)
+  if (flag_wifi)
   {
     WEB_SERVER_update();
     MQTT_update();
-    flag_wifi_server = 0;
-  }
-
-  if (flag_joystick)
-  {
-    JOYSTICK_update();
-    flag_joystick = 0;
+    flag_wifi = 0;
   }
 
   if (flag_LED)    

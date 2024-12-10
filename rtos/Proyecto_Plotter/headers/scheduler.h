@@ -3,10 +3,7 @@
 
 #include <Arduino.h>
 #include <Ticker.h>
-#include "servo_controller.h"
-#include "arm_controller.h"
-#include "drawing_module.h"
-#include "joystick_controller.h"
+#include "FSM.h"
 #include "web_server.h"
 #include "MQTT.h"
 

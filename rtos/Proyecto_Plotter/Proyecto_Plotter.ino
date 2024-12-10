@@ -4,6 +4,7 @@
 #include "headers/MQTT.h"
 #include "headers/joystick_controller.h"
 #include "headers/scheduler.h"
+#include "headers/FSM.h"
 
 void setup() 
 {

@@ -96,4 +96,6 @@ static const char* private_key =
 void MQTT_init();
 void MQTT_update();
 
+bool MQTT_is_manual_mode(); //Devuelve "true" si el modo de dibujo manual se encuentra activado
+
 #endif

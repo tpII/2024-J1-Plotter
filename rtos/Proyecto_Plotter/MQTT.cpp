@@ -5,6 +5,8 @@ static bool initialized_flag = false;
 WiFiClientSecure net;
 PubSubClient client(net);
 
+static bool manual_mode = false;
+
 static void messageArrived(char* topic, byte* payload, unsigned int length); //Recibe los mensajes
 static void sendMessage(const char* topic, const char* messageContent); //Formatea el mensaje para ser enviado por MQTT
 
@@ -12,6 +14,11 @@ static void sendMessage(const char* topic, const char* messageContent); //Format
 static void PREMADE_drawCircle(); 
 static void PREMADE_drawHeart(); 
 static void PREMADE_drawStar(); 
+
+bool MQTT_is_manual_mode() //Devuelve "true" si el modo de dibujo manual se encuentra activado
+{
+  return manual_mode;
+}
 
 void MQTT_init() 
 {

@@ -24,6 +24,11 @@ void DRAWING_MODULE_init()
   ARM_init();
 }
 
+bool DRAWING_MODULE_is_drawing() //Devuelve true si el modulo se encuentra dibujando (ocupado)
+{
+  return flag_drawing;
+}
+
 int DRAWING_MODULE_add_line(int startX, int startY, int endX, int endY) //Agrega la linea a la lista (coords de inicio y fin)
 {
   //Si las coordenadas de inicio y fin se encuentran dentro del rango de dibujo
