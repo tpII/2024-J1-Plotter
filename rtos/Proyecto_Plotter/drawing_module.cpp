@@ -150,8 +150,6 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
               else if (current_y > lines[current_index].endY) current_y--;
             }
           }
-          
-
         }
       }
     }
