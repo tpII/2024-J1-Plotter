@@ -14,9 +14,15 @@
 // MQTT Broker (AWS IoT Core)
 #define ADDRESS "a8qpa2kd8arw9-ats.iot.us-east-1.amazonaws.com"  
 #define CLIENTID "ESP32-Plotter"
+#define QOS 1
+
+//Topics a los cuales se suscribe/envia mensajes
 #define TOPIC_IN "robot/draw"
 #define TOPIC_OUT "robot/feedback"
-#define QOS 1
+
+//Campos JSON de los mensajes enviados/recibidos
+#define CAMPO_COMANDO "command" 
+#define CAMPO_LINEA "line" 
 
 // Claves MQTT
 // Certificado CA1

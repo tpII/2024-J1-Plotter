@@ -1,14 +1,16 @@
 #include "headers/MQTT.h"
 
 static bool initialized_flag = false;
+static bool manual_mode = false;
 
 WiFiClientSecure net;
 PubSubClient client(net);
 
-static bool manual_mode = false;
-
 static void messageArrived(char* topic, byte* payload, unsigned int length); //Recibe los mensajes
-static void sendMessage(const char* topic, const char* messageContent); //Formatea el mensaje para ser enviado por MQTT
+static void processCommand(const String& command); //Ejecuta las funciones correspondientes al comando recibido 
+
+static void sendMessage(const char* topic, const char* field, const char* messageContent); //Formatea el mensaje para ser enviado por MQTT
+static void sendMessage(const char* topic, const char* messageContent); //Envia un mensaje con el campo predeterminado
 
 //Dibujos de Prueba
 static void PREMADE_drawCircle(); 
@@ -58,7 +60,7 @@ void MQTT_init()
   Serial.println(TOPIC_IN);
   client.subscribe(TOPIC_IN, QOS);
 
-  client.publish(TOPIC_OUT, "ESP32 Conectado", false);
+  sendMessage(TOPIC_OUT, "Plotter Conectado");
 
   initialized_flag = true;
 
@@ -87,72 +89,118 @@ void MQTT_update()
   }
 }
 
-
 // Funcion callback para mensajes entrantes
-static void messageArrived(char* topic, byte* payload, unsigned int length) 
+static void messageArrived(char* topic, byte* payload, unsigned int length)
 {
   Serial.print("Message arrived - Topic: ");
   Serial.println(topic);
 
   Serial.print("Message: ");
-  String message = "";
+  String payloadString = "";
 
-  // Convert payload to a String
   for (int i = 0; i < length; i++) 
   {
-    message += (char)payload[i];
+    payloadString += (char)payload[i];
   }
-  Serial.println(message);
+  Serial.println(payloadString);
 
-  // Process the message
-  if (message == "STANDBY") 
+  // Parsea el JSON
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc, payloadString);
+
+  if (error) 
+  {
+    Serial.print("JSON Parsing failed: ");
+    Serial.println(error.c_str());
+    sendMessage(TOPIC_OUT,"Formato JSON invalido");
+    return;
+  }
+
+  // Si es un comando generico, lo interpreta
+  if (doc.containsKey(CAMPO_COMANDO)) 
+  {
+    String command = doc[CAMPO_COMANDO].as<String>();
+    processCommand(command);
+  } 
+  else 
+  {
+    Serial.println("Campos no reconocidos");
+    sendMessage(TOPIC_OUT,"Campos no reconocidos");
+  }
+}
+
+//Ejecuta las funciones correspondientes al comando recibido
+static void processCommand(const String& command) 
+{
+  if (command == "STANDBY") 
   {
     DRAWING_MODULE_stop();
     ARM_move_to(STARTING_X, STARTING_Y, true);
     sendMessage(TOPIC_OUT, "Standby - Posicion inicial");
   } 
-  else if (message == "START")
+  else if (command == "START") 
   {
     DRAWING_MODULE_start();
     sendMessage(TOPIC_OUT, "Dibujo iniciado");
   } 
-  else if (message == "STOP") 
+  else if (command == "STOP") 
   {
     DRAWING_MODULE_stop();
     sendMessage(TOPIC_OUT, "Dibujo detenido");
   } 
-  else if (message == "CIRCLE") 
+  else if (command == "RESET") 
+  {
+    DRAWING_MODULE_stop();
+    sendMessage(TOPIC_OUT, "Dibujo reseteado");
+  } 
+  else if (command == "MANUAL_ON") 
+  {
+    manual_mode = true;
+    sendMessage(TOPIC_OUT, "Modo manual activado");
+  } 
+  else if (command == "MANUAL_OFF") 
+  {
+    manual_mode = false;
+    sendMessage(TOPIC_OUT, "Modo manual desactivado");
+  } 
+  else if (command == "CIRCLE") 
   {
     PREMADE_drawCircle();
     sendMessage(TOPIC_OUT, "Circulo cargado");
   } 
-  else if (message == "STAR") 
+  else if (command == "STAR") 
   {
     PREMADE_drawStar();
     sendMessage(TOPIC_OUT, "Estrella cargada");
   } 
-  else if (message == "HEART") 
+  else if (command == "HEART") 
   {
     PREMADE_drawHeart();
     sendMessage(TOPIC_OUT, "Corazon cargado");
   } 
   else 
   {
-    Serial.println("Unknown command: " + message);
+    Serial.println("Unknown command: " + command);
     sendMessage(TOPIC_OUT, "Unknown command");
   }
 }
 
-static void sendMessage(const char* topic, const char* messageContent)
+
+
+static void sendMessage(const char* topic, const char* field, const char* messageContent)
 {
   // Documento Json
   StaticJsonDocument<200> jsonDoc;
-  jsonDoc["message"] = messageContent;
+  jsonDoc[field] = messageContent;
   char jsonBuffer[256];
   serializeJson(jsonDoc, jsonBuffer);
 
   // Envia el mensaje al topic especificado, formateado como JSON
   client.publish(topic, jsonBuffer, false);
+}
+static void sendMessage(const char* topic, const char* messageContent)
+{
+  sendMessage(topic, "message", messageContent);
 }
 
 ////////////////////////////////////////////////////
