@@ -4,21 +4,19 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 
 #include "arm_controller.h"
 #include "drawing_module.h"
 
 // WiFi 
-static const char* ssid = "";
-static const char* password = "";
 
 // MQTT Broker (AWS IoT Core)
 #define ADDRESS "a8qpa2kd8arw9-ats.iot.us-east-1.amazonaws.com"  
-#define CLIENTID "CSubscriberESP32-test"
+#define CLIENTID "ESP32-Plotter"
 #define TOPIC_IN "robot/draw"
 #define TOPIC_OUT "robot/feedback"
 #define QOS 1
-#define TIMEOUT 10000L
 
 // Claves MQTT
 // Certificado CA1

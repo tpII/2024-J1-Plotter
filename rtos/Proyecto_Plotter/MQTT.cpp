@@ -6,6 +6,7 @@ WiFiClientSecure net;
 PubSubClient client(net);
 
 static void messageArrived(char* topic, byte* payload, unsigned int length); //Recibe los mensajes
+static void sendMessage(const char* topic, const char* messageContent); //Formatea el mensaje para ser enviado por MQTT
 
 //Dibujos de Prueba
 static void PREMADE_drawCircle(); 
@@ -49,7 +50,6 @@ void MQTT_init()
   Serial.print("Subscribing to topic: ");
   Serial.println(TOPIC_IN);
   client.subscribe(TOPIC_IN, QOS);
-  //Serial.println("SUBSCRIBED");
 
   client.publish(TOPIC_OUT, "ESP32 Conectado", false);
 
@@ -72,13 +72,11 @@ void MQTT_update()
         } else {
           Serial.print("Failed to reconnect, retrying in 5 seconds... Error code: ");
           Serial.println(client.state());
-          //delay(1000);
         }
       }
     }
     // Procesa mensajes entrantes
     client.loop();
-    //client.publish(TOPIC_OUT, "Enviando Mensaje", false);
   }
 }
 
@@ -104,40 +102,51 @@ static void messageArrived(char* topic, byte* payload, unsigned int length)
   {
     DRAWING_MODULE_stop();
     ARM_move_to(STARTING_X, STARTING_Y, true);
-    client.publish(TOPIC_OUT, "Standby - Posicion inicial", false);
+    sendMessage(TOPIC_OUT, "Standby - Posicion inicial");
   } 
   else if (message == "START")
   {
     DRAWING_MODULE_start();
-    client.publish(TOPIC_OUT, "Dibujo iniciado", false);
+    sendMessage(TOPIC_OUT, "Dibujo iniciado");
   } 
   else if (message == "STOP") 
   {
     DRAWING_MODULE_stop();
-    client.publish(TOPIC_OUT, "Dibujo detenido", false);
+    sendMessage(TOPIC_OUT, "Dibujo detenido");
   } 
   else if (message == "CIRCLE") 
   {
     PREMADE_drawCircle();
-    client.publish(TOPIC_OUT, "Circulo cargado", false);
+    sendMessage(TOPIC_OUT, "Circulo cargado");
   } 
   else if (message == "STAR") 
   {
     PREMADE_drawStar();
-    client.publish(TOPIC_OUT, "Estrella cargada", false);
+    sendMessage(TOPIC_OUT, "Estrella cargada");
   } 
   else if (message == "HEART") 
   {
     PREMADE_drawHeart();
-    client.publish(TOPIC_OUT, "Corazon cargado", false);
+    sendMessage(TOPIC_OUT, "Corazon cargado");
   } 
   else 
   {
     Serial.println("Unknown command: " + message);
+    sendMessage(TOPIC_OUT, "Unknown command");
   }
 }
 
+static void sendMessage(const char* topic, const char* messageContent)
+{
+  // Documento Json
+  StaticJsonDocument<200> jsonDoc;
+  jsonDoc["message"] = messageContent;
+  char jsonBuffer[256];
+  serializeJson(jsonDoc, jsonBuffer);
 
+  // Envia el mensaje al topic especificado, formateado como JSON
+  client.publish(topic, jsonBuffer, false);
+}
 
 ////////////////////////////////////////////////////
 // Dibujos predeterminados
