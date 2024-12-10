@@ -8,6 +8,7 @@
 #include "drawing_module.h"
 #include "joystick_controller.h"
 #include "web_server.h"
+#include "MQTT.h"
 
 void SCHEDULER_init();
 void SCHEDULER_dispatch_tasks();
