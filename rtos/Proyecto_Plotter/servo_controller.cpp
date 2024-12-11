@@ -35,31 +35,45 @@ void SERVO_init()
   servo_vertical.attach(SERVO_VERTICAL_PIN);
   delay(100);
 
+  SERVO_setAngle(SERVO_VERTICAL_ID, LIFT_ANGLE_UP);
+  SERVO_standby_position();
+}
+
+void SERVO_standby_position() //Setea los servos en la posicion de Standby
+{
   target_alpha = 90;
   target_beta = 0;
-
-  //Angulos iniciales
   SERVO_setAngle(SERVO_ALPHA_ID, target_alpha); 
-  SERVO_setAngle(SERVO_BETA_ID, target_beta); 
-  SERVO_setAngle(SERVO_VERTICAL_ID, LIFT_ANGLE_UP);
+  SERVO_setAngle(SERVO_BETA_ID, target_beta);
 }
 
 //Setea el angulo del servo correspondiente 
 static void SERVO_setAngle(int servoID, int angle)
 {
+  //Correcciones por software para mitigar imperfecciones en el ensamblaje del brazo
+  const int correction_alpha = 8;
+  const int correction_beta = 8;
+  int aux = 0;
+
   if (angle < 0) angle = 0;
-  if (angle > 180) angle = 180;
+  else if (angle > 180) angle = 180;
 
   switch (servoID)
   {
     case SERVO_ALPHA_ID: 
       current_alpha = angle;
-      servo_alpha.write(180-angle);
+      aux = angle + correction_alpha;
+      if (aux < 0) aux = 0;
+      else if (aux > 180) aux = 180;
+      servo_alpha.write(180-aux);
     break;
 
     case SERVO_BETA_ID: 
       current_beta = angle;
-      servo_beta.write(180-angle);
+      aux = angle + correction_beta;
+      if (aux < 0) aux = 0;
+      else if (aux > 180) aux = 180;
+      servo_beta.write(180-aux);
     break;
 
     case SERVO_VERTICAL_ID: 
@@ -216,9 +230,6 @@ void SERVO_lift(bool lifted)
     }
   }
 }
-
-
-
 
 
 /*/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/

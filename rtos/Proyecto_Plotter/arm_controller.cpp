@@ -9,17 +9,17 @@ static bool initialized_flag = false;
 static bool currently_moving = false;
 
 static bool instant_move_next = false; //Indica que el siguiente movimiento debe ser "instantaneo" (independiente del caminos)
+static bool move_to_standby = false; //Indica que el siguiente movimiento debe ser a la posicion de standby (fuera del area de dibujo)
 
 static bool check_valid_coords(int coord_x, int coord_y); //Chequea que las coordenadas se encuentren en el rango posible de graficar
 
 void ARM_init()
 {
   SERVO_init();
-  //delay(500);
 
   if (check_valid_coords(STARTING_X, STARTING_Y))
   {
-    SERVO_moveto(STARTING_X + MIN_X, STARTING_Y + MIN_Y, true);
+    //SERVO_moveto(STARTING_X + MIN_X, STARTING_Y + MIN_Y, true);
     current_pos_x = STARTING_X;
     current_pos_y = STARTING_Y;
     target_pos_x = STARTING_X;
@@ -27,13 +27,12 @@ void ARM_init()
   }
   else
   {
-    SERVO_moveto(MIN_X, MIN_Y, true);
+    //SERVO_moveto(MIN_X, MAX_Y, true);
     current_pos_x = MIN_X;
-    current_pos_y = MIN_Y;
+    current_pos_y = MAX_Y;
     target_pos_x = MIN_X;
-    target_pos_y = MIN_Y;
+    target_pos_y = MAX_Y;
   }
-  //delay(500); //Asegura que el brazo este en la posicion inicial antes de continuar
   initialized_flag = true; 
 }
 
@@ -76,6 +75,21 @@ bool ARM_move_to(int target_x, int target_y, bool instant_move)
     return false; //Devuelve 'false' si aun no puede procesar la instruccion
 }
 
+void ARM_standby_position()
+{
+  if (!currently_moving)
+  {
+    current_pos_x = MIN_X-1;
+    current_pos_y = MAX_Y+1;
+    target_pos_x = MIN_X-1;
+    target_pos_y = MAX_Y+1;
+    
+    currently_moving = true;
+    move_to_standby = true;
+   
+  }
+}
+
 void ARM_lift(bool lift) //Controla la posicion vertical del brazo
 {
   if (initialized_flag)
@@ -113,6 +127,14 @@ void ARM_update()
   {
     if (!SERVO_waiting()) //Si el servo puede recibir instrucciones
     {
+      if (move_to_standby)
+      {
+        SERVO_standby_position();
+        currently_moving = false;
+        move_to_standby = false;
+        return;
+      }
+
       if ((current_pos_x != target_pos_x) || (current_pos_y != target_pos_y))
       {
         SERVO_moveto(target_pos_x + MIN_X, target_pos_y + MIN_Y, instant_move_next);

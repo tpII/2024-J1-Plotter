@@ -101,7 +101,7 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
         {
           flag_drawing = false;
           ARM_lift(true);
-          ARM_move_to(STARTING_X, STARTING_Y, true);
+          ARM_standby_position();
           return;
         }
 

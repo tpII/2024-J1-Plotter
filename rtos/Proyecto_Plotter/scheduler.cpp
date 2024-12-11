@@ -47,7 +47,6 @@ void SCHEDULER_dispatch_tasks()
 
   if (flag_wifi)
   {
-    WEB_SERVER_update();
     MQTT_update();
     flag_wifi = 0;
   }

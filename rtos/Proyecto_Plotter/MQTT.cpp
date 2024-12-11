@@ -13,6 +13,7 @@ static void sendMessage(const char* topic, const char* field, const char* messag
 static void sendMessage(const char* topic, const char* messageContent); //Envia un mensaje con el campo predeterminado
 
 //Dibujos de Prueba
+static void PREMADE_drawSquare();
 static void PREMADE_drawCircle(); 
 static void PREMADE_drawHeart(); 
 static void PREMADE_drawStar(); 
@@ -137,7 +138,7 @@ static void processCommand(const String& command)
   {
     DRAWING_MODULE_stop();
     ARM_lift(true);
-    ARM_move_to(STARTING_X, STARTING_Y, true);
+    ARM_standby_position();
     sendMessage(TOPIC_OUT, "Standby - Posicion inicial");
   } 
   else if (command == "START") 
@@ -174,6 +175,11 @@ static void processCommand(const String& command)
   {
     PREMADE_drawMultipleCircles();
     sendMessage(TOPIC_OUT, "Multiples Circulos cargados");
+  } 
+  else if (command == "SQUARE") 
+  {
+    PREMADE_drawSquare();
+    sendMessage(TOPIC_OUT, "Estrella cargada");
   } 
   else if (command == "STAR") 
   {
@@ -235,10 +241,10 @@ static void sendMessage(const char* topic, const char* messageContent)
 static void PREMADE_drawCircle() 
 {
     DRAWING_MODULE_reset();
-    const int centerX = 55;
+    const int centerX = 65;
     const int centerY = 70;
     const int radius = 45;
-    const int numSegments = 20;
+    const int numSegments = 60;
 
     float angleStep = 2 * 3.14159265 / numSegments;
     float startX = centerX + radius * cos(0);
@@ -296,6 +302,15 @@ static void PREMADE_drawStar()
     }
 }
 
+static void PREMADE_drawSquare()
+{
+  DRAWING_MODULE_reset();
+  DRAWING_MODULE_add_line( 10, 120, 90, 120);
+  DRAWING_MODULE_add_line( 90, 120, 90, 40);
+  DRAWING_MODULE_add_line( 90, 40, 10, 40);
+  DRAWING_MODULE_add_line( 10, 40, 10, 120);
+}
+
 static void PREMADE_drawMultipleCircles() 
 {
     DRAWING_MODULE_reset();
@@ -307,10 +322,10 @@ static void PREMADE_drawMultipleCircles()
     //Dimensiones del area de dibujo (X,Y): [111, 140] 
 
     //Primera circunferencia
-    int centerX = 55;
+    int centerX = 75;
     int centerY = 90;
-    int radius = 20;
-    int numSegments = 20;
+    int radius = 30;
+    int numSegments = 30;
     float angleStep = 2 * 3.14159265 / numSegments;
     float startX = centerX + radius * cos(0);
     float startY = centerY + radius * sin(0);
@@ -326,10 +341,10 @@ static void PREMADE_drawMultipleCircles()
     }
 
     //Segunda circunferencia
-    centerX = 60;
+    centerX = 80;
     centerY = 50;
-    radius = 20;
-    numSegments = 25;
+    radius = 30;
+    numSegments = 30;
     angleStep = 2 * 3.14159265 / numSegments;
     startX = centerX + radius * cos(0);
     startY = centerY + radius * sin(0);
@@ -346,9 +361,9 @@ static void PREMADE_drawMultipleCircles()
     }
 
     //Tercera circunferencia
-    centerX = 30;
+    centerX = 40;
     centerY = 50;
-    radius = 20;
+    radius = 30;
     numSegments = 30;
     angleStep = 2 * 3.14159265 / numSegments;
     startX = centerX + radius * cos(0);

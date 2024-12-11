@@ -1,6 +1,5 @@
 #include "headers/arm_controller.h"
 #include "headers/drawing_module.h"
-#include "headers/web_server.h"
 #include "headers/MQTT.h"
 #include "headers/joystick_controller.h"
 #include "headers/scheduler.h"
