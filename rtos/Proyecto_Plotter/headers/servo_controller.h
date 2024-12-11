@@ -13,9 +13,14 @@
 #define SERVO_BETA_PIN 19
 #define SERVO_VERTICAL_PIN 23
 
+#define LIFT_DELAY 40 //Ciclos de FMS que espera el brazo al subir/bajar antes de volver a moverse
+#define LIFT_ANGLE_UP 90 //Angulo que debe moverse el servo vertical
+#define LIFT_ANGLE_DOWN 0 //Angulo que debe moverse el servo vertical
+
 void SERVO_init(); 
 void SERVO_moveto(int x_coord, int y_coord, bool instant_move); //Calcula los angulos alfa y beta para posicionar el extremo en (X,Y)
 void SERVO_lift(bool lifted); //Eleva o desciende el servo vertical
+bool SERVO_is_lifted(); //Indica si el servo vertical esta en posicion maxima
 bool SERVO_waiting(); //Devuelve "false" si los servos pueden recibir instrucciones nuevas
 
 void SERVO_test(); //Funcion Bloqueante para testear el funcionamiento de los tres servos

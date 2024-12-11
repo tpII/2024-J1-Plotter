@@ -13,30 +13,35 @@ static const float constant_1 = (ARM_LENGTH_A*ARM_LENGTH_A)+(ARM_LENGTH_B*ARM_LE
 static const float constant_2 = (2*ARM_LENGTH_A*ARM_LENGTH_B);
 static const float to_degrees = (180.0 / PI);
 
-static int angle_alpha = 0;
-static int angle_beta = 0;
 static int angle_vertical = 0;
 
-//Mejora algoritmo
 static int current_alpha, current_beta = 0;
 static int start_alpha, start_beta = 0;
 static int target_alpha, target_beta = 0;
 static int remaining_alpha, remaining_beta = 0;
 static int delta_alpha, delta_beta = 0;
 
+static bool instant_next = false;
 static bool servo_waiting = false;
+static int lift_timer = 0;  //Ciclos restante de espera al servo vertical
 
 static void SERVO_setAngle(int servoID, int angle); //Setea el angulo del servo correspondiente 
+static void SERVO_move_towards_target(); //Calcula el angulo con el mayor porcentaje de camino restante, y lo mueve
 
 void SERVO_init()
 {
   servo_alpha.attach(SERVO_ALPHA_PIN);
   servo_beta.attach(SERVO_BETA_PIN);
   servo_vertical.attach(SERVO_VERTICAL_PIN);
+  delay(100);
+
+  target_alpha = 90;
+  target_beta = 0;
 
   //Angulos iniciales
-  SERVO_setAngle(SERVO_ALPHA_ID, 90); 
-  SERVO_setAngle(SERVO_BETA_ID, 0); 
+  SERVO_setAngle(SERVO_ALPHA_ID, target_alpha); 
+  SERVO_setAngle(SERVO_BETA_ID, target_beta); 
+  SERVO_setAngle(SERVO_VERTICAL_ID, LIFT_ANGLE_UP);
 }
 
 //Setea el angulo del servo correspondiente 
@@ -48,15 +53,13 @@ static void SERVO_setAngle(int servoID, int angle)
   switch (servoID)
   {
     case SERVO_ALPHA_ID: 
-      angle_alpha = 180-angle;
       current_alpha = angle;
-      servo_alpha.write(angle_alpha);
+      servo_alpha.write(180-angle);
     break;
 
     case SERVO_BETA_ID: 
-      angle_beta = 180-angle;
       current_beta = angle;
-      servo_beta.write(angle_beta);
+      servo_beta.write(180-angle);
     break;
 
     case SERVO_VERTICAL_ID: 
@@ -69,55 +72,78 @@ static void SERVO_setAngle(int servoID, int angle)
   }
 }
 
+static void SERVO_move_towards_target() //Calcula el angulo con el mayor porcentaje de camino restante, y lo mueve
+{
+  delta_alpha = abs(target_alpha - start_alpha);
+  delta_beta = abs(target_beta - start_beta);
+
+  if (delta_alpha != 0)
+  {
+    remaining_alpha = abs(target_alpha - current_alpha)/delta_alpha;
+  }
+  else remaining_alpha = -1;
+  if (delta_beta != 0)
+  {
+    remaining_beta = abs(target_beta - current_beta)/delta_beta;
+  }
+  else remaining_beta = -1;
+
+  if (remaining_alpha > remaining_beta)
+  {
+    if (current_alpha < target_alpha) current_alpha++;
+    else if (current_alpha > target_alpha) current_alpha--;
+  }
+  else
+  {
+    if (remaining_alpha < remaining_beta)
+    {
+      if (current_beta < target_beta) current_beta++;
+      else if (current_beta > target_beta) current_beta--;
+    }
+    else
+    {
+      if (current_alpha < target_alpha) current_alpha++;
+      else if (current_alpha > target_alpha) current_alpha--;
+
+      if (current_beta < target_beta) current_beta++;
+      else if (current_beta > target_beta) current_beta--;
+    }
+  }
+}
+
 void SERVO_update()
 {
-  if (servo_waiting)
+  if (lift_timer > 0) //Si esta esperando a que se acomode el servo vertical, decrementa la espera
   {
-    //Si llegaron los angulos al destino
-    if (current_alpha == target_alpha && current_beta == target_beta)
+    lift_timer--;
+  }
+  else
+  {
+    if (servo_waiting)
     {
-      servo_waiting = false; //Termina la espera
-    }
-    else //Si falta movimiento de algun angulo
-    {
-      delta_alpha = abs(target_alpha - start_alpha);
-      delta_beta = abs(target_beta - start_beta);
-
-      if (delta_alpha != 0)
+      if (instant_next) //Si el movimiento es instantaneo, salta directo al final
       {
-        remaining_alpha = abs(target_alpha - current_alpha)/delta_alpha;
-      }
-      else remaining_alpha = -1;
-      if (delta_beta != 0)
-      {
-        remaining_beta = abs(target_beta - current_beta)/delta_beta;
-      }
-      else remaining_beta = -1;
-
-      if (remaining_alpha > remaining_beta)
-      {
-        if (current_alpha < target_alpha) current_alpha++;
-        else if (current_alpha > target_alpha) current_alpha--;
+        SERVO_setAngle(SERVO_ALPHA_ID, target_alpha); 
+        SERVO_setAngle(SERVO_BETA_ID, target_beta);
+        start_alpha = current_alpha;
+        start_beta = current_beta;
+        instant_next = false;
+        lift_timer += LIFT_DELAY; //Agrega tiempo de espera para no bajar el brazo inmediatamente
       }
       else
       {
-        if (remaining_alpha < remaining_beta)
+        //Si llegaron los angulos al destino
+        if (current_alpha == target_alpha && current_beta == target_beta)
         {
-          if (current_beta < target_beta) current_beta++;
-          else if (current_beta > target_beta) current_beta--;
+          servo_waiting = false; //Termina la espera
         }
-        else
+        else //Si falta movimiento de algun angulo
         {
-          if (current_alpha < target_alpha) current_alpha++;
-          else if (current_alpha > target_alpha) current_alpha--;
-
-          if (current_beta < target_beta) current_beta++;
-          else if (current_beta > target_beta) current_beta--;
+          SERVO_move_towards_target();
+          SERVO_setAngle(SERVO_ALPHA_ID, current_alpha); 
+          SERVO_setAngle(SERVO_BETA_ID, current_beta); 
         }
       }
-
-      SERVO_setAngle(SERVO_ALPHA_ID, current_alpha); 
-      SERVO_setAngle(SERVO_BETA_ID, current_beta); 
     }
   }
 }
@@ -143,25 +169,19 @@ void SERVO_moveto(int x_coord, int y_coord, bool instant_move)
 
   if (instant_move)
   {
-    SERVO_setAngle(SERVO_ALPHA_ID, (int)alpha);
-    SERVO_setAngle(SERVO_BETA_ID, (int)beta);
-    servo_waiting = false;
-    return;
+    instant_next = true;
   }
-  else
-  {
-    //Guarda los angulos iniciales
-    start_alpha = current_alpha;
-    start_beta = current_beta;
+  //Guarda los angulos iniciales
+  start_alpha = current_alpha;
+  start_beta = current_beta;
 
-    //Guarda los angulos destino
-    target_alpha = (int)alpha;
-    target_beta = (int)beta;
+  //Guarda los angulos destino
+  target_alpha = (int)alpha;
+  target_beta = (int)beta;
 
-    servo_waiting = true;
+  servo_waiting = true;
 
-    return;
-  }
+  return;
 }
 
 bool SERVO_waiting() //Devuelve "false" si los servos pueden recibir instrucciones nuevas
@@ -169,15 +189,39 @@ bool SERVO_waiting() //Devuelve "false" si los servos pueden recibir instruccion
   return servo_waiting;
 }
 
+bool SERVO_is_lifted()
+{
+  return (angle_vertical == LIFT_ANGLE_UP);
+}
+
 //Eleva o desciende el servo vertical
 void SERVO_lift(bool lifted)
 {
   if (lifted)
-    SERVO_setAngle(SERVO_VERTICAL_ID, 180);
+  { 
+    if (angle_vertical != LIFT_ANGLE_UP)
+    {
+      SERVO_setAngle(SERVO_VERTICAL_ID, LIFT_ANGLE_UP);
+      servo_waiting = true;
+      lift_timer = LIFT_DELAY;
+    }
+  }
   else
-    SERVO_setAngle(SERVO_VERTICAL_ID, 0);
+  {
+    if (angle_vertical != LIFT_ANGLE_DOWN)
+    {
+      SERVO_setAngle(SERVO_VERTICAL_ID, LIFT_ANGLE_DOWN);
+      servo_waiting = true;
+      lift_timer = LIFT_DELAY;
+    }
+  }
 }
 
+
+
+
+
+/*/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 //Funcion Bloqueante para testear el funcionamiento de los tres servos
 void SERVO_test()
 {

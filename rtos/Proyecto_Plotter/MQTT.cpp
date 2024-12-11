@@ -16,6 +16,7 @@ static void sendMessage(const char* topic, const char* messageContent); //Envia 
 static void PREMADE_drawCircle(); 
 static void PREMADE_drawHeart(); 
 static void PREMADE_drawStar(); 
+static void PREMADE_drawMultipleCircles();
 
 bool MQTT_is_manual_mode() //Devuelve "true" si el modo de dibujo manual se encuentra activado
 {
@@ -135,6 +136,7 @@ static void processCommand(const String& command)
   if (command == "STANDBY") 
   {
     DRAWING_MODULE_stop();
+    ARM_lift(true);
     ARM_move_to(STARTING_X, STARTING_Y, true);
     sendMessage(TOPIC_OUT, "Standby - Posicion inicial");
   } 
@@ -168,6 +170,11 @@ static void processCommand(const String& command)
     PREMADE_drawCircle();
     sendMessage(TOPIC_OUT, "Circulo cargado");
   } 
+  else if (command == "CIRCLES") 
+  {
+    PREMADE_drawMultipleCircles();
+    sendMessage(TOPIC_OUT, "Multiples Circulos cargados");
+  } 
   else if (command == "STAR") 
   {
     PREMADE_drawStar();
@@ -178,14 +185,32 @@ static void processCommand(const String& command)
     PREMADE_drawHeart();
     sendMessage(TOPIC_OUT, "Corazon cargado");
   } 
+  else if (command == "VERTUP") 
+  {
+    ARM_lift(true);
+    sendMessage(TOPIC_OUT, "Brazo Up");
+  } 
+  else if (command == "VERTDOWN") 
+  {
+    ARM_lift(false);
+    sendMessage(TOPIC_OUT, "Brazo Down");
+  }
+  else if (command == "VERTTOGGLE") 
+  {
+    ARM_lift(!ARM_is_lifted());
+    sendMessage(TOPIC_OUT, "Toggled");
+  }
+  else if (command == "SHIFT") 
+  {
+    ARM_shift_by(0, -1);
+    sendMessage(TOPIC_OUT, "Shifted");
+  } 
   else 
   {
     Serial.println("Unknown command: " + command);
     sendMessage(TOPIC_OUT, "Unknown command");
   }
 }
-
-
 
 static void sendMessage(const char* topic, const char* field, const char* messageContent)
 {
@@ -268,5 +293,75 @@ static void PREMADE_drawStar()
         int endY = points[(i + 1) % 10][1];
 
         DRAWING_MODULE_add_line(startX, startY, endX, endY);
+    }
+}
+
+static void PREMADE_drawMultipleCircles() 
+{
+    DRAWING_MODULE_reset();
+
+    float angle;
+    float nextX;
+    float nextY;
+
+    //Dimensiones del area de dibujo (X,Y): [111, 140] 
+
+    //Primera circunferencia
+    int centerX = 55;
+    int centerY = 90;
+    int radius = 20;
+    int numSegments = 20;
+    float angleStep = 2 * 3.14159265 / numSegments;
+    float startX = centerX + radius * cos(0);
+    float startY = centerY + radius * sin(0);
+    float lastX = startX;
+    float lastY = startY;
+    for (int i = 1; i <= numSegments; i++) {
+        angle = i * angleStep;
+        nextX = centerX + radius * cos(angle);
+        nextY = centerY + radius * sin(angle);
+        DRAWING_MODULE_add_line(lastX, lastY, nextX, nextY);
+        lastX = nextX;
+        lastY = nextY;
+    }
+
+    //Segunda circunferencia
+    centerX = 60;
+    centerY = 50;
+    radius = 20;
+    numSegments = 25;
+    angleStep = 2 * 3.14159265 / numSegments;
+    startX = centerX + radius * cos(0);
+    startY = centerY + radius * sin(0);
+    lastX = startX;
+    lastY = startY;
+    for (int i = 1; i <= numSegments; i++) 
+    {
+        angle = i * angleStep;
+        nextX = centerX + radius * cos(angle);
+        nextY = centerY + radius * sin(angle);
+        DRAWING_MODULE_add_line(lastX, lastY, nextX, nextY);
+        lastX = nextX;
+        lastY = nextY;
+    }
+
+    //Tercera circunferencia
+    centerX = 30;
+    centerY = 50;
+    radius = 20;
+    numSegments = 30;
+    angleStep = 2 * 3.14159265 / numSegments;
+    startX = centerX + radius * cos(0);
+    startY = centerY + radius * sin(0);
+    lastX = startX;
+    lastY = startY;
+    for (int i = 1; i <= numSegments; i++) 
+    {
+        angle = i * angleStep;
+        nextX = centerX + radius * cos(angle);
+        nextY = centerY + radius * sin(angle);
+        DRAWING_MODULE_add_line(lastX, lastY, nextX, nextY);
+        lastX = nextX;
+        lastY = nextY;
     }
 }

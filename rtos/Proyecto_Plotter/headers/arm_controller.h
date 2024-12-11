@@ -25,6 +25,7 @@ void ARM_shift_by(int shift_x, int shift_y); //Desplaza el brazo una cierta cant
 bool ARM_move_to(int target_x, int target_y, bool instant_move); //Mueve el brazo hacia las coordenadas recibidas (Devuelve 'false' si aun no puede procesar la instruccion)
 void ARM_lift(bool lift); //Controla la posicion vertical del brazo
 bool ARM_is_lifted(); //Devuelve true si el brazo se encuentra elevado
+bool ARM_is_busy(); //Devuelve true si el brazo no esta listo para recibir mas instrucciones
 
 
 #endif

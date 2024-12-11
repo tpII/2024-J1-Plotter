@@ -19,6 +19,8 @@ static int current_index = DRAWER_STANDBY; // '-1' si no esta dibujando, '-2' si
 
 static bool flag_drawing = false; //Indica si esta dibujando
 
+static void ARM_advance_line(int *curr_x, int *curr_y); //Avanza n unidades hacia el final de la linea dependiendo del progreso restante de cada eje
+
 void DRAWING_MODULE_init()
 {
   ARM_init();
@@ -53,6 +55,7 @@ int DRAWING_MODULE_add_line(int startX, int startY, int endX, int endY) //Agrega
 void DRAWING_MODULE_reset() //Elimina todas las lineas de la lista
 {
   final_index = DRAWER_EMPTY;
+  current_index = DRAWER_STANDBY;
 }
 
 void DRAWING_MODULE_start() //Comienza a dibujar desde la linea 0
@@ -67,25 +70,19 @@ void DRAWING_MODULE_start() //Comienza a dibujar desde la linea 0
   }
 }
 
-
 void DRAWING_MODULE_stop() //Detiene el dibujo antes de terminarlo
 {
   flag_drawing = false;
   current_index = DRAWER_STANDBY;
 }
 
-
 void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el scheduler)
 {
   static int current_x = 0;
   static int current_y = 0;
 
-  double delta_x, delta_y, remaining_x, remaining_y;
-
-  if (flag_drawing)
+  if (flag_drawing && !ARM_is_busy())
   {
-    if (ARM_is_lifted()) ARM_lift(0);
-
     if (current_index == DRAWER_PRIMERA_LINEA) //Indica que empieza el dibujo
     {
       current_index = 0;
@@ -94,73 +91,83 @@ void DRAWING_MODULE_update() //Actualiza el estado del modulo (utilizado por el 
     }
     else
     {
-      if (ARM_move_to(current_x, current_y, false))
+      //Si llega al final de la linea
+      if (current_x == lines[current_index].endX && current_y == lines[current_index].endY)
       {
-        //Si llega al final de la linea
-        if (current_x == lines[current_index].endX && current_y == lines[current_index].endY)
-        {
-          current_index++;
-          //Si llega al final del dibujo
-          if (current_index > final_index) 
-          {
-            flag_drawing = false;
-            return;
-          }
+        current_index++;
 
-          //Si la siguiente linea NO empieza donde termina la anterior, se levanta y se mueve
-          if (!(lines[current_index-1].endX == lines[current_index].startX) ||
-              !(lines[current_index-1].endY == lines[current_index].startY))
-          {
-            ARM_lift(1);
-            current_x = lines[current_index].startX;
-            current_y = lines[current_index].startY;
-            ARM_move_to(current_x, current_y, true);
-          }
+        //Si llega al final del dibujo
+        if (current_index > final_index) 
+        {
+          flag_drawing = false;
+          ARM_lift(true);
+          ARM_move_to(STARTING_X, STARTING_Y, true);
+          return;
         }
-        else //Si aun no llega al final
+
+        //Si la siguiente linea NO empieza donde termina la anterior, se levanta y se mueve
+        if (!(lines[current_index-1].endX == lines[current_index].startX) ||
+            !(lines[current_index-1].endY == lines[current_index].startY))
         {
-          //Avanza n unidades hacia el final de la linea dependiendo del progreso restante de cada eje
-          delta_x = abs(lines[current_index].endX - lines[current_index].startX);
-          delta_y = abs(lines[current_index].endY - lines[current_index].startY);
-          if (delta_x != 0)
-          {
-            remaining_x = abs(lines[current_index].endX - current_x)/delta_x;
-          }
-          else remaining_x = -1;
-
-          if (delta_y != 0)
-          {
-            remaining_y = abs(lines[current_index].endY - current_y)/delta_y;
-          }
-          else remaining_y = -1;
-
-          if (remaining_x > remaining_y)
-          {
-            if (current_x < lines[current_index].endX) current_x++;
-            else if (current_x > lines[current_index].endX) current_x--;
-          }
-          else
-          {
-            if (remaining_x < remaining_y)
-            {
-              if (current_y < lines[current_index].endY) current_y++;
-              else if (current_y > lines[current_index].endY) current_y--;
-            }
-            else
-            {
-              if (current_x < lines[current_index].endX) current_x++;
-              else if (current_x > lines[current_index].endX) current_x--;
-
-              if (current_y < lines[current_index].endY) current_y++;
-              else if (current_y > lines[current_index].endY) current_y--;
-            }
-          }
+          ARM_lift(true);
+          current_x = lines[current_index].startX;
+          current_y = lines[current_index].startY;
+          ARM_move_to(current_x, current_y, true);           
         }
       }
+      else //Si aun no llega al final
+      {
+        ARM_advance_line(&current_x, &current_y);
+        ARM_move_to(current_x, current_y, false);
+      }
+      
     }
   }
 }
 
+//Avanza n unidades hacia el final de la linea dependiendo del progreso restante de cada eje
+static void ARM_advance_line(int *curr_x, int *curr_y)
+{
+  double delta_x, delta_y, remaining_x, remaining_y;
+
+  ARM_lift(false);
+  
+  delta_x = abs(lines[current_index].endX - lines[current_index].startX);
+  delta_y = abs(lines[current_index].endY - lines[current_index].startY);
+  if (delta_x != 0)
+  {
+    remaining_x = abs(lines[current_index].endX - (*curr_x))/delta_x;
+  }
+  else remaining_x = -1;
+
+  if (delta_y != 0)
+  {
+    remaining_y = abs(lines[current_index].endY - (*curr_y))/delta_y;
+  }
+  else remaining_y = -1;
+
+  if (remaining_x > remaining_y)
+  {
+    if ((*curr_x) < lines[current_index].endX) (*curr_x)++;
+    else if ((*curr_x) > lines[current_index].endX) (*curr_x)--;
+  }
+  else
+  {
+    if (remaining_x < remaining_y)
+    {
+      if ((*curr_y) < lines[current_index].endY) (*curr_y)++;
+      else if ((*curr_y) > lines[current_index].endY) (*curr_y)--;
+    }
+    else
+    {
+      if ((*curr_x) < lines[current_index].endX) (*curr_x)++;
+      else if ((*curr_x) > lines[current_index].endX) (*curr_x)--;
+
+      if ((*curr_y) < lines[current_index].endY) (*curr_y)++;
+      else if ((*curr_y) > lines[current_index].endY) (*curr_y)--;
+    }
+  }
+}
 
 
 
