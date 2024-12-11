@@ -60,14 +60,21 @@
           <span class="text-lg font-bold">Drawing Window</span>
 
           <!-- Right: Erase Button -->
-          <button 
+           <div class="flex flex-row">
+            <button 
             id="resetButton" 
-            class="flex items-center text-sm bg-white text-gray-500 font-semibold px-3 py-1 rounded-lg hover:bg-gray-200 transition duration-300">
+            class="flex mx-2 items-center text-sm bg-white text-gray-500 font-semibold px-2 pl-4 py-1 rounded-lg hover:bg-gray-200 transition duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M16.446 3.414c-.783-.783-2.047-.783-2.829 0l-10.202 10.2c-.781.782-.781 2.047 0 2.828l5.656 5.656c.782.781 2.047.781 2.828 0l10.202-10.202c.782-.781.782-2.046 0-2.828l-5.655-5.654zm-1.414 1.414l5.656 5.656-3.536 3.535-5.656-5.656 3.536-3.535zm-4.95 4.95l5.656 5.656-3.535 3.535-5.656-5.656 3.535-3.535zm-8.486 5.656l3.535-3.535 5.656 5.656-3.535 3.535-5.656-5.656z"/>
             </svg>
-            Erase
           </button>
+          <button 
+            id="startButton" 
+            class="flex items-center text-sm bg-green-500 font-semibold px-3 py-1 rounded-lg hover:bg-green-200 transition text-white duration-300">
+            Start
+          </button>
+           </div>
+          
         </div>
         <!-- Canvas Area -->
         <div class="p-4 flex justify-center">

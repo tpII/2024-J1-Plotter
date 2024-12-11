@@ -1,9 +1,10 @@
 const apiGatewayUrl = 'https://uqhtsxbehl.execute-api.us-east-1.amazonaws.com/';
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
-const canvasContainer = canvas.parentElement; // Contenedor del canvas
-const overlayMessage = document.createElement('div'); // Overlay message
 const resetButton = document.getElementById('resetButton');
+const startButton = document.getElementById('startButton');
+const canvasContainer = canvas.parentElement; // Contenedor del canvas
+const overlayMessage = document.createElement('div');
 
 let drawing = false;
 let strokeBuffer = [];
@@ -14,10 +15,44 @@ const cognitoLogoutUrl = "https://plotter.auth.us-east-1.amazoncognito.com/logou
 
 let idToken = null;
 
+// Rango de normalización
+const X_RANGE = [0, 110];
+const Y_RANGE = [0, 140];
+
 // Modo de desarrollo
 const isDevelopment = false;
 
-// Maneja login y logout según el estado del usuario
+// Normaliza las coordenadas al rango especificado
+function normalizeCoordinates(x, y) {
+  const normalizedX = Math.round((x / canvas.width) * (X_RANGE[1] - X_RANGE[0]) + X_RANGE[0]);
+  const normalizedY = Math.round((y / canvas.height) * (Y_RANGE[1] - Y_RANGE[0]) + Y_RANGE[0]);
+  return [normalizedX, normalizedY];
+}
+
+// Enviar comandos específicos
+async function sendCommand(command, data = "") {
+  const payload = { command, data };
+  try {
+    const response = await fetch(apiGatewayUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(`Error al enviar comando ${command}:`, response.statusText);
+    } else {
+      console.log(`Comando ${command} enviado correctamente.`);
+    }
+  } catch (error) {
+    console.error(`Error al enviar comando ${command}:`, error);
+  }
+}
+
+// Configuración del login/logout
 function handleAuth() {
   if (idToken) {
     if (isDevelopment) {
@@ -40,17 +75,11 @@ function handleAuth() {
   }
 }
 
-// Actualiza dinámicamente el texto del botón
 function updateAuthButton() {
   const loginButton = document.getElementById("loginButton");
-  if (idToken) {
-    loginButton.textContent = "Log out";
-  } else {
-    loginButton.textContent = "Log in";
-  }
+  loginButton.textContent = idToken ? "Log out" : "Log in";
 }
 
-// Extrae el token del hash de la URL después del login (solo producción)
 if (!isDevelopment) {
   const hash = window.location.hash.substring(1);
   const params = new URLSearchParams(hash);
@@ -65,25 +94,84 @@ if (!isDevelopment) {
   }
 }
 
-updateAuthButton(); // Actualiza el botón al cargar la página
+updateAuthButton();
+setupCanvasOverlay();
+checkCanvasState();
 
-// Revisa el estado del canvas según la autenticación
-function checkCanvasState() {
+// Limpia el canvas y envía STOP
+resetButton.addEventListener('click', () => {
   if (!idToken) {
-    overlayMessage.style.display = 'flex';
-    canvasContainer.style.opacity = '0.5'; // Ventana transparente
-    canvas.style.pointerEvents = 'none';
-    canvas.style.opacity = '0.5';
-  } else {
-    overlayMessage.style.display = 'none';
-    canvasContainer.style.opacity = '1'; // Ventana sin transparencia
-    canvas.style.pointerEvents = 'auto';
-    canvas.style.opacity = '1';
+    alert("Debes iniciar sesión para borrar el canvas.");
+    return;
   }
+  clearCanvas();
+  sendCommand("STOP");
+});
+
+// Inicia el dibujo al presionar Start
+startButton.addEventListener('click', () => {
+  if (!idToken) {
+    alert("Debes iniciar sesión para comenzar a dibujar.");
+    return;
+  }
+  sendCommand("START");
+});
+
+// Iniciar el dibujo
+function startDrawing(event) {
+  if (!idToken) return;
+  drawing = true;
+  strokeBuffer = [];
+  const [mouseX, mouseY] = getMousePosition(event);
+  strokeBuffer.push(normalizeCoordinates(mouseX, mouseY));
 }
 
-// Inicializa el mensaje de overlay sobre el canvas
-// Inicializa el mensaje de overlay sobre el canvas
+// Detener el dibujo y enviar STROKE
+async function stopDrawing() {
+  if (!drawing) return;
+  drawing = false;
+
+  if (strokeBuffer.length > 0) {
+    const data = {
+      x: strokeBuffer.map(coord => coord[0]),
+      y: strokeBuffer.map(coord => coord[1]),
+    };
+    await sendCommand("STROKE", data);
+  }
+  strokeBuffer = [];
+}
+
+// Dibujar en el canvas
+function draw(event) {
+  if (!drawing) return;
+
+  const [mouseX, mouseY] = getMousePosition(event);
+  const [normalizedX, normalizedY] = normalizeCoordinates(mouseX, mouseY);
+
+  ctx.beginPath();
+  const lastPoint = strokeBuffer[strokeBuffer.length - 1];
+  ctx.moveTo(lastPoint[0], lastPoint[1]);
+  ctx.lineTo(normalizedX, normalizedY);
+  ctx.stroke();
+
+  strokeBuffer.push([normalizedX, normalizedY]);
+}
+
+// Obtener la posición del mouse
+function getMousePosition(event) {
+  const rect = canvas.getBoundingClientRect();
+  return [
+    event.clientX - rect.left,
+    event.clientY - rect.top,
+  ];
+}
+
+// Limpia el contenido del canvas
+function clearCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Overlay para el estado de autenticación
 function setupCanvasOverlay() {
   overlayMessage.innerHTML = `
     <div style="text-align: center;">
@@ -102,107 +190,25 @@ function setupCanvasOverlay() {
   overlayMessage.style.borderRadius = '8px';
   overlayMessage.style.display = 'none';
   overlayMessage.style.zIndex = '10';
-  overlayMessage.style.lineHeight = '2rem'; // Añade espacio entre líneas para mejor diseño
 
-  const canvasContainer = canvas.parentElement;
   canvasContainer.style.position = 'relative';
   canvasContainer.appendChild(overlayMessage);
-
-  checkCanvasState();
 }
 
-
-// Limpia el contenido del canvas
-function clearCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-// Maneja el clic en el botón "Erase"
-resetButton.addEventListener('click', () => {
+function checkCanvasState() {
   if (!idToken) {
-    alert("Debes iniciar sesión para borrar el canvas.");
-    return;
-  }
-  clearCanvas();
-});
-
-// Función para iniciar el dibujo
-function startDrawing(event) {
-  if (!idToken) return; // Desactiva si no hay sesión
-  drawing = true;
-  strokeBuffer = [];
-  const [mouseX, mouseY] = getMousePosition(event);
-  strokeBuffer.push({ x: mouseX, y: mouseY });
-}
-
-// Función para detener el dibujo
-async function stopDrawing() {
-  if (!drawing) return;
-  drawing = false;
-  if (strokeBuffer.length > 0) {
-    if (!isDevelopment) {
-      await sendStroke(strokeBuffer);
-    } else {
-      console.log("Simulación de trazo enviado:", strokeBuffer);
-    }
-  }
-  strokeBuffer = [];
-}
-
-// Función para dibujar en el canvas
-function draw(event) {
-  if (!drawing) return;
-
-  const [mouseX, mouseY] = getMousePosition(event);
-  ctx.beginPath();
-  const lastPoint = strokeBuffer[strokeBuffer.length - 1];
-  ctx.moveTo(lastPoint.x, lastPoint.y);
-  ctx.lineTo(mouseX, mouseY);
-  ctx.stroke();
-  strokeBuffer.push({ x: mouseX, y: mouseY });
-}
-
-// Función para obtener la posición del mouse relativa al canvas (ajustado para offset y scroll)
-// Función para obtener la posición del mouse relativa al canvas
-function getMousePosition(event) {
-  const rect = canvas.getBoundingClientRect(); // Obtiene el tamaño y la posición del canvas en la ventana
-  const scaleX = canvas.width / rect.width; // Escala horizontal del canvas
-  const scaleY = canvas.height / rect.height; // Escala vertical del canvas
-
-  // Ajusta la posición del mouse considerando el scroll y el escalado
-  const mouseX = (event.clientX - rect.left) * scaleX;
-  const mouseY = (event.clientY - rect.top) * scaleY;
-
-  return [mouseX, mouseY];
-}
-
-
-// Función para enviar los trazos completados al API Gateway
-async function sendStroke(stroke) {
-  try {
-    console.log('Authorization Header:', `Bearer ${idToken}`);
-    const response = await fetch(apiGatewayUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({ stroke }),
-    });
-
-    if (!response.ok) {
-      console.error('Failed to send stroke:', response.statusText);
-    }
-  } catch (error) {
-    console.error('Error sending stroke:', error);
+    overlayMessage.style.display = 'flex';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.opacity = '0.5';
+  } else {
+    overlayMessage.style.display = 'none';
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.opacity = '1';
   }
 }
 
-// Agrega los eventos para el canvas
+// Eventos del canvas
 canvas.addEventListener('mousedown', startDrawing);
 canvas.addEventListener('mouseup', stopDrawing);
 canvas.addEventListener('mouseout', stopDrawing);
 canvas.addEventListener('mousemove', draw);
-
-// Configuración inicial
-setupCanvasOverlay();
