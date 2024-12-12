@@ -157,13 +157,11 @@ function draw(event) {
   strokeBuffer.push([normalizedX, normalizedY]);
 }
 
-// Obtener la posición del mouse
 function getMousePosition(event) {
   const rect = canvas.getBoundingClientRect();
-  return [
-    event.clientX - rect.left,
-    event.clientY - rect.top,
-  ];
+  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  return [event.clientX - rect.left - scrollLeft, event.clientY - rect.top - scrollTop];
 }
 
 // Limpia el contenido del canvas
