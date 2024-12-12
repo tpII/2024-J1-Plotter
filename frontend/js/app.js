@@ -252,6 +252,7 @@ canvas.addEventListener('touchstart', startDrawing);
 canvas.addEventListener('touchmove', draw);
 canvas.addEventListener('touchend', stopDrawing);
 canvas.addEventListener('touchcancel', stopDrawing);
+setupGamepad(); // Inicializa la funcionalidad del joystick
 
 
 // Función para enviar el comando PING
@@ -266,3 +267,62 @@ setInterval(() => {
     // sendPing();
   }
 }, 5000); // 5000 ms = 5 segundos
+
+let joystickMode = false; // Variable para indicar si está activado el modo joystick
+
+// Configurar la funcionalidad del joystick
+function setupGamepad() {
+  window.addEventListener("gamepadconnected", (e) => {
+    console.log(`Gamepad conectado: ${e.gamepad.id}`);
+    pollGamepad();
+  });
+
+  window.addEventListener("gamepaddisconnected", () => {
+    console.log("Gamepad desconectado");
+  });
+
+  function pollGamepad() {
+    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = gamepads[0]; // Selecciona el primer gamepad conectado
+    if (gp) {
+      handleGamepadInput(gp);
+    }
+    requestAnimationFrame(pollGamepad);
+  }
+}
+
+// Manejar las entradas del joystick
+function handleGamepadInput(gp) {
+  // Botón B9 (Menu) - Cambiar al modo joystick
+  if (gp.buttons[9].pressed && !joystickMode) {
+    joystickMode = true;
+    sendCommand("MODESWITCH", ""); // Activar modo joystick
+    console.log("Modo joystick activado");
+  }
+
+  // Si está en modo joystick
+  if (joystickMode) {
+    // Botón A (B0) - Enviar VERTDOWN y VERTUP
+    if (gp.buttons[0].pressed) {
+      sendCommand("VERTDOWN", "");
+      console.log("VERTDOWN");
+    } else if (!gp.buttons[0].pressed) {
+      sendCommand("VERTUP", "");
+      console.log("VERTUP");
+    }
+
+    // Joystick principal (stick izquierdo) - Enviar MOVE
+    const axisX = gp.axes[0]; // Eje X
+    const axisY = gp.axes[1]; // Eje Y
+
+    // Normalizar entre 0 y 1
+    const dx = ((axisX + 1) / 2).toFixed(2); // Eje X (0 a 1)
+    const dy = ((axisY + 1) / 2).toFixed(2); // Eje Y (0 a 1)
+
+    // Solo enviar si hay movimiento significativo
+    if (Math.abs(axisX) > 0.05 || Math.abs(axisY) > 0.05) {
+      sendCommand("MOVE", { dx, dy });
+      console.log(`MOVE: dx=${dx}, dy=${dy}`);
+    }
+  }
+}
