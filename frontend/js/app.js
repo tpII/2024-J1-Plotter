@@ -251,6 +251,6 @@ function sendPing() {
 // Ejecutar la función PING cada 5 segundos
 setInterval(() => {
   if (idToken) { // Solo enviar PING si el usuario está autenticado
-    sendPing();
+    // sendPing();
   }
 }, 5000); // 5000 ms = 5 segundos
