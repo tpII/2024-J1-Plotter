@@ -4,7 +4,7 @@ Ticker msTicker;
 
 // Flags utilizadas por el scheduler
 volatile bool flag_LED = false;
-volatile bool flag_wifi = false;
+volatile bool flag_MQTT = false;
 volatile bool flag_FSM = false;
 
 // Funcion del TICK
@@ -20,12 +20,12 @@ void onTick()
 
   if (counter % 10 == 0) //cada 100ms
   {
-    flag_wifi = true;
+    flag_MQTT = true;
+    flag_LED = true;
   }
 
   if (counter >= 100) //cada 1sec
   {
-    flag_LED = true;
     counter = 0;
   }
 }
@@ -45,19 +45,20 @@ void SCHEDULER_dispatch_tasks()
     flag_FSM = 0;
   } 
 
-  if (flag_wifi)
+  if (flag_MQTT)
   {
     MQTT_update();
-    flag_wifi = 0;
+    flag_MQTT = 0;
   }
 
   if (flag_LED)    
   {
-    //Usado para testear que el timer funciona correctamente
-    if (digitalRead(2))
-      digitalWrite (2,LOW); 
-    else
-      digitalWrite (2,HIGH); 
+    //Indica si se esta recibiendo informacion de la interfaz web (x tiempo desde el ultimo 'ping')
+    if (MQTT_ping_status()) 
+      { digitalWrite (2,HIGH); }
+    else 
+      { digitalWrite (2,LOW); }
+
     flag_LED = 0;
   } 
      

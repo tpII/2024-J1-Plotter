@@ -5,15 +5,16 @@
 #define DRAWER_STANDBY -1
 #define DRAWER_EMPTY -1
 
+//Se utilizan variables char ya que las coordenadas no superan las 255 unidades
 typedef struct 
 {
-    short startX; 
-    short startY; 
-    short endX;   
-    short endY;   
+    char startX; 
+    char startY; 
+    char endX;   
+    char endY;   
 } Line;
-
 static Line lines[MAX_LINES];
+
 static int final_index = DRAWER_EMPTY; //Indice de la ultima linea introducida
 static int current_index = DRAWER_STANDBY; // '-1' si no esta dibujando, '-2' si comienza el dibujo
 
@@ -43,13 +44,21 @@ int DRAWING_MODULE_add_line(int startX, int startY, int endX, int endY) //Agrega
     if ((final_index+1) < MAX_LINES)
     {
       final_index++;
-      lines[final_index].startX = startX;
-      lines[final_index].endX = endX;
-      lines[final_index].startY = startY;
-      lines[final_index].endY = endY;
+      lines[final_index].startX = (char)startX;
+      lines[final_index].endX = (char)endX;
+      lines[final_index].startY = (char)startY;
+      lines[final_index].endY = (char)endY;
+    }
+    else
+    {
+      return 1; //Devuelve 1 si no hay mas espacio en el arreglo
     }
   }
-  return 0;
+  else 
+  { 
+    return 2; //Devuelve 2 si las coordenadas se encuentran fuera de rango
+  }
+  return 0; //Devuelve 0 si funciona correctamente
 }
 
 void DRAWING_MODULE_reset() //Elimina todas las lineas de la lista

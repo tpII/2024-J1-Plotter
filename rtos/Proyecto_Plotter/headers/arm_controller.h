@@ -6,13 +6,13 @@
 
 //Valores maximos y minimos de coordenadas que puede alcanzar el lapiz
 //Usados para abstraer los limites del area de dibujo
-#define MIN_X 34
+#define MIN_X 35
 #define MAX_X 145
 #define MIN_Y -70
 #define MAX_Y 70
 #define RANGE_Y (MAX_Y-MIN_Y)
 #define RANGE_X (MAX_X-MIN_X)
-  //Dimensiones del area de dibujo (X,Y): [111, 140] 
+  //Dimensiones del area de dibujo (X,Y): [110, 140] 
 
 // Coordenadas iniciales del brazo
 #define STARTING_X RANGE_X-MIN_X
@@ -30,3 +30,4 @@ bool ARM_is_busy(); //Devuelve true si el brazo no esta listo para recibir mas i
 
 
 #endif
+

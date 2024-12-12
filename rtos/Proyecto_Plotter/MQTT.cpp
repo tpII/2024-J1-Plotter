@@ -7,21 +7,19 @@ WiFiClientSecure net;
 PubSubClient client(net);
 
 static void messageArrived(char* topic, byte* payload, unsigned int length); //Recibe los mensajes
-static void processCommand(const String& command); //Ejecuta las funciones correspondientes al comando recibido 
+static void processCommand(const char* command, JsonVariant data); //Ejecuta las funciones correspondientes al comando recibido 
+static void process_stroke(JsonVariant data); //Recibe los puntos de un trazo, y los une con lineas rectas
 
 static void sendMessage(const char* topic, const char* field, const char* messageContent); //Formatea el mensaje para ser enviado por MQTT
 static void sendMessage(const char* topic, const char* messageContent); //Envia un mensaje con el campo predeterminado
 
-//Dibujos de Prueba
-static void PREMADE_drawSquare();
-static void PREMADE_drawCircle(); 
-static void PREMADE_drawHeart(); 
-static void PREMADE_drawStar(); 
-static void PREMADE_drawMultipleCircles();
+static int ping_timer = 0;
 
 bool MQTT_is_manual_mode() //Devuelve "true" si el modo de dibujo manual se encuentra activado
 {
-  return manual_mode;
+  //Si no esta inicializado el MQTT, automaticamente se setea a modo manual
+  if (!initialized_flag) return true;
+  else return manual_mode;
 }
 
 void MQTT_init() 
@@ -30,10 +28,9 @@ void MQTT_init()
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) 
   {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
+    //Conectando
+    delay(500);
   }
-  Serial.println("Connected to WiFi");
 
   // Certificados SSL 
   net.setCACert(root_ca);
@@ -45,27 +42,25 @@ void MQTT_init()
   client.setCallback(messageArrived);
 
   // Conecta al MQTT broker
-  Serial.println("Connecting to AWS IoT Core...");
   while (!client.connected()) {
-    if (client.connect(CLIENTID)) {
-      Serial.println("Connected to AWS IoT Core");
-    } else {
-      Serial.print("Failed to connect, retrying in 5 seconds... Error code: ");
-      Serial.println(client.state());
-      delay(1000);
+    if (client.connect(CLIENTID)) 
+    {
+      //Conectado a AWS
+    } 
+    else 
+    {
+      //Reintentando conexion
+      delay(500);
     }
   }
-
-  // Subscribe to the topic
+  
+  //Configuraciones
+  client.setBufferSize(49152); //48 kB
   client.setKeepAlive(60);
-  Serial.print("Subscribing to topic: ");
-  Serial.println(TOPIC_IN);
   client.subscribe(TOPIC_IN, QOS);
-
   sendMessage(TOPIC_OUT, "Plotter Conectado");
 
   initialized_flag = true;
-
 }
 
 void MQTT_update()
@@ -75,31 +70,27 @@ void MQTT_update()
     // Se reconecta si es necesario
     if (!client.connected()) 
     {
-      Serial.println("Reconnecting to MQTT...");
+      //Reconectando a MQTT
       while (!client.connected()) {
         if (client.connect(CLIENTID)) {
-          Serial.println("Reconnected to MQTT");
           client.subscribe(TOPIC_IN, QOS);
         } else {
-          Serial.print("Failed to reconnect, retrying in 5 seconds... Error code: ");
+          Serial.print("Error al conectar al MQTT: ");
           Serial.println(client.state());
         }
       }
     }
     // Procesa mensajes entrantes
     client.loop();
+
+    if (ping_timer > 0) ping_timer--; //Decrementa el timer desde la ultima vez que se recibio un ping
   }
 }
 
 // Funcion callback para mensajes entrantes
 static void messageArrived(char* topic, byte* payload, unsigned int length)
 {
-  Serial.print("Message arrived - Topic: ");
-  Serial.println(topic);
-
-  Serial.print("Message: ");
   String payloadString = "";
-
   for (int i = 0; i < length; i++) 
   {
     payloadString += (char)payload[i];
@@ -107,116 +98,154 @@ static void messageArrived(char* topic, byte* payload, unsigned int length)
   Serial.println(payloadString);
 
   // Parsea el JSON
-  StaticJsonDocument<200> doc;
-  DeserializationError error = deserializeJson(doc, payloadString);
+  DynamicJsonDocument doc(40000);
 
+  DeserializationError error = deserializeJson(doc, payloadString);
   if (error) 
   {
-    Serial.print("JSON Parsing failed: ");
-    Serial.println(error.c_str());
-    sendMessage(TOPIC_OUT,"Formato JSON invalido");
+    sendMessage(TOPIC_OUT,"Error: Formato JSON invalido");
     return;
   }
 
-  // Si es un comando generico, lo interpreta
-  if (doc.containsKey(CAMPO_COMANDO)) 
+  if (doc.containsKey(COMMAND_FIELD))
   {
-    String command = doc[CAMPO_COMANDO].as<String>();
-    processCommand(command);
-  } 
-  else 
+    // Extrae los datos de "command" y "data" del JSON
+    const char* command = doc["command"];
+    JsonVariant data = doc["data"];
+    processCommand(command, data);
+  }
+  else
   {
-    Serial.println("Campos no reconocidos");
-    sendMessage(TOPIC_OUT,"Campos no reconocidos");
+    sendMessage(TOPIC_OUT, "Error: Campos no reconocidos");
+    return;
   }
 }
 
-//Ejecuta las funciones correspondientes al comando recibido
-static void processCommand(const String& command) 
+// Procesa comandos segun el tipo
+static void processCommand(const char* command, JsonVariant data)
 {
-  if (command == "STANDBY") 
+  if (strcmp(command, "START") == 0)
+  {
+    DRAWING_MODULE_start();
+    sendMessage(TOPIC_OUT, "Dibujo iniciado");
+  } 
+  else if (strcmp(command, "STOP") == 0)
+  {
+    DRAWING_MODULE_stop();
+    DRAWING_MODULE_reset();
+    ARM_lift(true);
+    ARM_standby_position();
+    sendMessage(TOPIC_OUT, "Dibujo detenido y lineas eliminadas. Posicion Standby.");
+  } 
+  else if (strcmp(command, "STROKE") == 0)
+  {
+    process_stroke(data);
+  }
+  else if (strcmp(command, "MANUAL_ON") == 0)
+  {
+    manual_mode = true;
+    sendMessage(TOPIC_OUT, "Modo manual activado");
+  } 
+  else if (strcmp(command, "MANUAL_OFF") == 0)
+  {
+    manual_mode = false;
+    sendMessage(TOPIC_OUT, "Modo manual desactivado");
+  } 
+  else if (strcmp(command, "VERTUP") == 0)
+  {
+    ARM_lift(true);
+    sendMessage(TOPIC_OUT, "Brazo Up");
+  } 
+  else if (strcmp(command, "VERTDOWN") == 0)
+  {
+    ARM_lift(false);
+    sendMessage(TOPIC_OUT, "Brazo Down");
+  }
+  else if (strcmp(command, "VERTTOGGLE") == 0)
+  {
+    ARM_lift(!ARM_is_lifted());
+    sendMessage(TOPIC_OUT, "Toggled");
+  }
+  else if (strcmp(command, "MOVE") == 0)
+  {
+    int dx = data["dx"].as<int>();  
+    int dy = data["dy"].as<int>();  
+
+    ARM_shift_by(dx, dy); 
+    sendMessage(TOPIC_OUT, "Brazo controlado");
+  } 
+  else if (strcmp(command, "PING") == 0)
+  {
+    ping_timer = PING_CYCLES;
+    sendMessage(TOPIC_OUT, "Ping Recibido");
+  } 
+  else if (strcmp(command, "STANDBY") == 0)
   {
     DRAWING_MODULE_stop();
     ARM_lift(true);
     ARM_standby_position();
     sendMessage(TOPIC_OUT, "Standby - Posicion inicial");
   } 
-  else if (command == "START") 
+
+  //Dibujos prearmados
+  else if (strcmp(command, "PREMADE") == 0)
   {
-    DRAWING_MODULE_start();
-    sendMessage(TOPIC_OUT, "Dibujo iniciado");
-  } 
-  else if (command == "STOP") 
-  {
-    DRAWING_MODULE_stop();
-    sendMessage(TOPIC_OUT, "Dibujo detenido");
-  } 
-  else if (command == "RESET") 
-  {
-    DRAWING_MODULE_stop();
-    sendMessage(TOPIC_OUT, "Dibujo reseteado");
-  } 
-  else if (command == "MANUAL_ON") 
-  {
-    manual_mode = true;
-    sendMessage(TOPIC_OUT, "Modo manual activado");
-  } 
-  else if (command == "MANUAL_OFF") 
-  {
-    manual_mode = false;
-    sendMessage(TOPIC_OUT, "Modo manual desactivado");
-  } 
-  else if (command == "CIRCLE") 
-  {
-    PREMADE_drawCircle();
-    sendMessage(TOPIC_OUT, "Circulo cargado");
-  } 
-  else if (command == "CIRCLES") 
-  {
-    PREMADE_drawMultipleCircles();
-    sendMessage(TOPIC_OUT, "Multiples Circulos cargados");
-  } 
-  else if (command == "SQUARE") 
-  {
-    PREMADE_drawSquare();
-    sendMessage(TOPIC_OUT, "Estrella cargada");
-  } 
-  else if (command == "STAR") 
-  {
-    PREMADE_drawStar();
-    sendMessage(TOPIC_OUT, "Estrella cargada");
-  } 
-  else if (command == "HEART") 
-  {
-    PREMADE_drawHeart();
-    sendMessage(TOPIC_OUT, "Corazon cargado");
-  } 
-  else if (command == "VERTUP") 
-  {
-    ARM_lift(true);
-    sendMessage(TOPIC_OUT, "Brazo Up");
-  } 
-  else if (command == "VERTDOWN") 
-  {
-    ARM_lift(false);
-    sendMessage(TOPIC_OUT, "Brazo Down");
+    const char* shape = data.as<const char*>();
+
+    if (strcmp(shape, "CIRCLE") == 0) { PREMADE_drawCircle(); }
+    else if (strcmp(shape, "CIRCLES") == 0) { PREMADE_drawMultipleCircles(); }
+    else if (strcmp(shape, "SQUARE") == 0) { PREMADE_drawSquare(); }
+    else if (strcmp(shape, "STAR") == 0) { PREMADE_drawStar(); }
+    else if (strcmp(shape, "TRIANGLE") == 0) { PREMADE_drawTriangle(); }
+    else if (strcmp(shape, "HEART") == 0) { PREMADE_drawHeart(); }
+    else { 
+        sendMessage(TOPIC_OUT, "Error: Figura no reconocida"); 
+        return; 
+    }
+    sendMessage(TOPIC_OUT, "Figura cargada");
   }
-  else if (command == "VERTTOGGLE") 
-  {
-    ARM_lift(!ARM_is_lifted());
-    sendMessage(TOPIC_OUT, "Toggled");
-  }
-  else if (command == "SHIFT") 
-  {
-    ARM_shift_by(0, -1);
-    sendMessage(TOPIC_OUT, "Shifted");
-  } 
+
   else 
-  {
-    Serial.println("Unknown command: " + command);
-    sendMessage(TOPIC_OUT, "Unknown command");
+  { 
+    sendMessage(TOPIC_OUT, "Error: Comando no reconocido"); 
   }
 }
+
+static void process_stroke(JsonVariant data) 
+{
+  int error_code = 0;
+  int startX, startY, endX, endY;
+
+  JsonObject obj = data.as<JsonObject>(); 
+  JsonArray x = obj["x"];
+  JsonArray y = obj["y"];
+
+  // Chequea que los datos sean utilizables
+  if (x.size() < 2 || y.size() < 2) {
+    sendMessage(TOPIC_OUT, "Error: Se necesitan al menos 2 puntos para trazar una linea");
+    return;
+  }
+  if (x.size() != y.size()) {
+    sendMessage(TOPIC_OUT, "Error: Los arreglos x e y deben tener el mismo tamaño.");
+    return;
+  }
+
+  // Draw lines between consecutive points
+  for (size_t i = 0; i < x.size() - 1; i++) {
+    startX = x[i];
+    startY = y[i];
+    endX = x[i + 1];
+    endY = y[i + 1];
+
+    error_code = DRAWING_MODULE_add_line(startX, startY, endX, endY);
+
+    if (error_code == 1) { sendMessage(TOPIC_OUT, "Error: Arreglo de lineas lleno"); return; }
+    else if (error_code == 2) { sendMessage(TOPIC_OUT, "Error: Coordenadas fuera de rango"); return; }
+  }
+
+  sendMessage(TOPIC_OUT, "Linea Procesada");
+}
+
 
 static void sendMessage(const char* topic, const char* field, const char* messageContent)
 {
@@ -234,149 +263,8 @@ static void sendMessage(const char* topic, const char* messageContent)
   sendMessage(topic, "message", messageContent);
 }
 
-////////////////////////////////////////////////////
-// Dibujos predeterminados
-////////////////////////////////////////////////////
-
-static void PREMADE_drawCircle() 
+bool MQTT_ping_status() //Devuelve verdadero si el timer del ping es mayor a cero
 {
-    DRAWING_MODULE_reset();
-    const int centerX = 65;
-    const int centerY = 70;
-    const int radius = 45;
-    const int numSegments = 60;
-
-    float angleStep = 2 * 3.14159265 / numSegments;
-    float startX = centerX + radius * cos(0);
-    float startY = centerY + radius * sin(0);
-
-    float lastX = startX;
-    float lastY = startY;
-
-    for (int i = 1; i <= numSegments; i++) {
-        float angle = i * angleStep;
-        float nextX = centerX + radius * cos(angle);
-        float nextY = centerY + radius * sin(angle);
-
-        DRAWING_MODULE_add_line(lastX, lastY, nextX, nextY);
-
-        lastX = nextX;
-        lastY = nextY;
-    }
+  return (ping_timer > 0);
 }
 
-static void PREMADE_drawHeart() 
-{
-    DRAWING_MODULE_reset();
-    DRAWING_MODULE_add_line(55, 100, 40, 110);
-    DRAWING_MODULE_add_line(40, 110, 30, 100);
-    DRAWING_MODULE_add_line(30, 100, 30, 80);
-    DRAWING_MODULE_add_line(30, 80, 40, 70);
-    DRAWING_MODULE_add_line(40, 70, 55, 50);
-    DRAWING_MODULE_add_line(55, 50, 70, 70);
-    DRAWING_MODULE_add_line(70, 70, 80, 80);
-    DRAWING_MODULE_add_line(80, 80, 80, 100);
-    DRAWING_MODULE_add_line(80, 100, 70, 110);
-    DRAWING_MODULE_add_line(70, 110, 55, 100);
-}
-
-static void PREMADE_drawStar() 
-{
-    DRAWING_MODULE_reset();
-
-    int points[10][2] = {
-        {55, 30}, {63, 60},
-        {90, 60}, {67, 75},
-        {75, 110}, {55, 90},
-        {35, 110}, {43, 75},
-        {20, 60}, {47, 60}
-    };
-
-    for (int i = 0; i < 10; i++) {
-        int startX = points[i][0];
-        int startY = points[i][1];
-        int endX = points[(i + 1) % 10][0];
-        int endY = points[(i + 1) % 10][1];
-
-        DRAWING_MODULE_add_line(startX, startY, endX, endY);
-    }
-}
-
-static void PREMADE_drawSquare()
-{
-  DRAWING_MODULE_reset();
-  DRAWING_MODULE_add_line( 10, 120, 90, 120);
-  DRAWING_MODULE_add_line( 90, 120, 90, 40);
-  DRAWING_MODULE_add_line( 90, 40, 10, 40);
-  DRAWING_MODULE_add_line( 10, 40, 10, 120);
-}
-
-static void PREMADE_drawMultipleCircles() 
-{
-    DRAWING_MODULE_reset();
-
-    float angle;
-    float nextX;
-    float nextY;
-
-    //Dimensiones del area de dibujo (X,Y): [111, 140] 
-
-    //Primera circunferencia
-    int centerX = 75;
-    int centerY = 90;
-    int radius = 30;
-    int numSegments = 30;
-    float angleStep = 2 * 3.14159265 / numSegments;
-    float startX = centerX + radius * cos(0);
-    float startY = centerY + radius * sin(0);
-    float lastX = startX;
-    float lastY = startY;
-    for (int i = 1; i <= numSegments; i++) {
-        angle = i * angleStep;
-        nextX = centerX + radius * cos(angle);
-        nextY = centerY + radius * sin(angle);
-        DRAWING_MODULE_add_line(lastX, lastY, nextX, nextY);
-        lastX = nextX;
-        lastY = nextY;
-    }
-
-    //Segunda circunferencia
-    centerX = 80;
-    centerY = 50;
-    radius = 30;
-    numSegments = 30;
-    angleStep = 2 * 3.14159265 / numSegments;
-    startX = centerX + radius * cos(0);
-    startY = centerY + radius * sin(0);
-    lastX = startX;
-    lastY = startY;
-    for (int i = 1; i <= numSegments; i++) 
-    {
-        angle = i * angleStep;
-        nextX = centerX + radius * cos(angle);
-        nextY = centerY + radius * sin(angle);
-        DRAWING_MODULE_add_line(lastX, lastY, nextX, nextY);
-        lastX = nextX;
-        lastY = nextY;
-    }
-
-    //Tercera circunferencia
-    centerX = 40;
-    centerY = 50;
-    radius = 30;
-    numSegments = 30;
-    angleStep = 2 * 3.14159265 / numSegments;
-    startX = centerX + radius * cos(0);
-    startY = centerY + radius * sin(0);
-    lastX = startX;
-    lastY = startY;
-    for (int i = 1; i <= numSegments; i++) 
-    {
-        angle = i * angleStep;
-        nextX = centerX + radius * cos(angle);
-        nextY = centerY + radius * sin(angle);
-        DRAWING_MODULE_add_line(lastX, lastY, nextX, nextY);
-        lastX = nextX;
-        lastY = nextY;
-    }
-}

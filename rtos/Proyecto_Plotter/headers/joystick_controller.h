@@ -3,6 +3,7 @@
 #define _JOYSTICK_CONTROLLER_H_
 
 #include <Arduino.h>
+#include "servo_controller.h"
 #include "arm_controller.h"
 
 //Pines a los que se conectan las entradas de X, Y, y el boton del Stick respectivamente

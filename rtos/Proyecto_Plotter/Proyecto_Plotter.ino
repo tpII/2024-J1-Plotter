@@ -8,10 +8,11 @@
 void setup() 
 {
   Serial.begin(115200);
-  DRAWING_MODULE_init();
-  //WEB_SERVER_init();
-  //JOYSTICK_init();
+
   MQTT_init();
+  //JOYSTICK_init();
+
+  DRAWING_MODULE_init();
   SCHEDULER_init();
   Serial.println("Setup Complete");
 }

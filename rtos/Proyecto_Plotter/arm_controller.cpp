@@ -86,7 +86,6 @@ void ARM_standby_position()
     
     currently_moving = true;
     move_to_standby = true;
-   
   }
 }
 

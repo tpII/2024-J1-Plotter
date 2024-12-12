@@ -4,7 +4,7 @@
 
 #include "arm_controller.h"
 
-#define MAX_LINES 8000 //Cantidad maxima de lineas guardadas en el arreglo
+#define MAX_LINES 16000 //Cantidad maxima de lineas guardadas en el arreglo
 
 void DRAWING_MODULE_init(); //Inicializa el modulo
 
@@ -16,7 +16,5 @@ void DRAWING_MODULE_start(); //Comienza a dibujar desde la linea '0'
 void DRAWING_MODULE_stop(); //Detiene el dibujo antes de terminarlo
 
 void DRAWING_MODULE_update(); //Actualiza el estado del modulo (utilizado por el scheduler)
-
-
 
 #endif
