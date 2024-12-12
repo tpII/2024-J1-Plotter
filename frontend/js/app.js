@@ -9,28 +9,44 @@ const overlayMessage = document.createElement('div');
 let drawing = false;
 let strokeBuffer = [];
 
+// Rango de normalización
+const X_RANGE = [0, 110];
+const Y_RANGE = [0, 140];
+
+// Modo de desarrollo
+const isDevelopment = window.location.hostname === "localhost";
+
 // URLs de Cognito
-const cognitoLoginUrl = "https://plotter.auth.us-east-1.amazoncognito.com/login?client_id=32ad6ce6ub7eq69qetg3f151cj&response_type=token&scope=email+openid&redirect_uri=https://d212solchqqpyx.cloudfront.net/";
-const cognitoLogoutUrl = "https://plotter.auth.us-east-1.amazoncognito.com/logout?client_id=32ad6ce6ub7eq69qetg3f151cj&logout_uri=https://d212solchqqpyx.cloudfront.net/";
+const cognitoLoginUrl = isDevelopment
+  ? "https://plotter.auth.us-east-1.amazoncognito.com/login?client_id=32ad6ce6ub7eq69qetg3f151cj&response_type=token&scope=email+openid&redirect_uri=http://localhost:5500/frontend"
+  : "https://plotter.auth.us-east-1.amazoncognito.com/login?client_id=32ad6ce6ub7eq69qetg3f151cj&response_type=token&scope=email+openid&redirect_uri=https://d212solchqqpyx.cloudfront.net/";
+
+const cognitoLogoutUrl = isDevelopment
+  ? "https://plotter.auth.us-east-1.amazoncognito.com/logout?client_id=32ad6ce6ub7eq69qetg3f151cj&logout_uri=http://localhost:5500/frontend"
+  : "https://plotter.auth.us-east-1.amazoncognito.com/logout?client_id=32ad6ce6ub7eq69qetg3f151cj&logout_uri=https://d212solchqqpyx.cloudfront.net/";
 
 let idToken = null;
 
-// Rango de normalización
-const Y_RANGE = [0, 140];
-const X_RANGE = [0, 110];
-
-// Modo de desarrollo
-const isDevelopment = false;
-
 // Normaliza las coordenadas al rango especificado
-function normalizeCoordinates(y, x) {
-  const normalizedX = Math.round((x / canvas.width) * (X_RANGE[1] - X_RANGE[0]) + X_RANGE[0]);
-  const normalizedY = Math.round((y / canvas.height) * (Y_RANGE[1] - Y_RANGE[0]) + Y_RANGE[0]);
+function normalizeCoordinates(x, y) {
+  const normalizedX = x / canvas.width;   // Normaliza X entre 0 y 1
+  const normalizedY = y / canvas.height; // Normaliza Y entre 0 y 1
+
   return [normalizedX, normalizedY];
 }
 
+
+
+
+
+
 // Enviar comandos específicos
 async function sendCommand(command, data = "") {
+  if (isDevelopment) {
+    console.log(`Comando ${command} (modo local):`, JSON.stringify({ command, data }));
+    return; // Evita enviar la solicitud en modo local
+  }
+
   const payload = { command, data };
   try {
     const response = await fetch(apiGatewayUrl, {
@@ -123,7 +139,7 @@ function startDrawing(event) {
   drawing = true;
   strokeBuffer = [];
   const [mouseX, mouseY] = getMousePosition(event);
-  strokeBuffer.push(normalizeCoordinates(mouseX, mouseY));
+  strokeBuffer.push([mouseX, mouseY]);
 }
 
 // Detener el dibujo y enviar STROKE
@@ -132,36 +148,51 @@ async function stopDrawing() {
   drawing = false;
 
   if (strokeBuffer.length > 0) {
+    // Normaliza las coordenadas antes de enviar
+    const normalizedData = strokeBuffer.map(coord => normalizeCoordinates(coord[0], coord[1]));
+
+    // Log simple de coordenadas normalizadas
+    console.log("Enviando coordenadas normalizadas:");
+    normalizedData.forEach(coord => console.log(`(${coord[0].toFixed(2)}, ${coord[1].toFixed(2)})`));
+
     const data = {
-      x: strokeBuffer.map(coord => coord[0]),
-      y: strokeBuffer.map(coord => coord[1]),
+      x: normalizedData.map(coord => coord[0]), // Coordenadas X normalizadas
+      y: normalizedData.map(coord => coord[1]), // Coordenadas Y normalizadas
     };
+
     await sendCommand("STROKE", data);
+    strokeBuffer = [];
   }
-  strokeBuffer = [];
 }
+
+
 
 // Dibujar en el canvas
 function draw(event) {
   if (!drawing) return;
 
   const [mouseX, mouseY] = getMousePosition(event);
-  const [normalizedX, normalizedY] = normalizeCoordinates(mouseX, mouseY);
 
   ctx.beginPath();
   const lastPoint = strokeBuffer[strokeBuffer.length - 1];
-  ctx.moveTo(lastPoint[0], lastPoint[1]);
-  ctx.lineTo(normalizedX, normalizedY);
+  ctx.moveTo(lastPoint[0], lastPoint[1]); // Dibuja desde la última posición natural
+  ctx.lineTo(mouseX, mouseY);             // Dibuja a la posición actual
   ctx.stroke();
 
-  strokeBuffer.push([normalizedX, normalizedY]);
+  strokeBuffer.push([mouseX, mouseY]); // Guarda las coordenadas naturales
 }
 
+
+// Obtener la posición del mouse
 function getMousePosition(event) {
   const rect = canvas.getBoundingClientRect();
-  const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  return [event.clientX - rect.left - scrollLeft, event.clientY - rect.top - scrollTop];
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  return [
+    Math.round((event.clientX - rect.left) * scaleX),
+    Math.round((event.clientY - rect.top) * scaleY),
+  ];
 }
 
 // Limpia el contenido del canvas
@@ -210,3 +241,16 @@ canvas.addEventListener('mousedown', startDrawing);
 canvas.addEventListener('mouseup', stopDrawing);
 canvas.addEventListener('mouseout', stopDrawing);
 canvas.addEventListener('mousemove', draw);
+
+// Función para enviar el comando PING
+function sendPing() {
+  sendCommand("PING", "");
+  console.log("Comando PING enviado");
+}
+
+// Ejecutar la función PING cada 5 segundos
+setInterval(() => {
+  if (idToken) { // Solo enviar PING si el usuario está autenticado
+    sendPing();
+  }
+}, 5000); // 5000 ms = 5 segundos
