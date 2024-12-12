@@ -15,11 +15,16 @@ static const float to_degrees = (180.0 / PI);
 
 static int angle_vertical = 0;
 
-static int current_alpha, current_beta = 0;
-static int start_alpha, start_beta = 0;
-static int target_alpha, target_beta = 0;
-static int remaining_alpha, remaining_beta = 0;
-static int delta_alpha, delta_beta = 0;
+static int current_alpha = 0;
+static int current_beta = 0;
+static int start_alpha= 0;
+static int start_beta = 0;
+static int target_alpha = 0;
+static int target_beta = 0;
+static int remaining_alpha = 0;
+static int remaining_beta = 0;
+static int delta_alpha = 0;
+static int delta_beta = 0;
 
 static bool instant_next = false;
 static bool servo_waiting = false;

@@ -201,7 +201,8 @@ static void processCommand(const char* command, JsonVariant data)
   {
     float joystick_x = data["dx"].as<float>();
     float joystick_y = data["dy"].as<float>();  
-    int dx, dy;
+    int dx = 0;
+    int dy = 0;
 
     //Eje X del joystick
     if (abs(joystick_x) > 0.30){ 
@@ -211,8 +212,8 @@ static void processCommand(const char* command, JsonVariant data)
       if (joystick_x > 0) dx = 2;
       else dx = -2;}
     if (abs(joystick_x) > 0.70){
-      if (joystick_x > 0) dx = 3;
-      else dx = -3;}
+      if (joystick_x > 0) dx = 4;
+      else dx = -4;}
 
     //Eje Y del joystick
     if (abs(joystick_y) > 0.30){ 
@@ -222,8 +223,9 @@ static void processCommand(const char* command, JsonVariant data)
       if (joystick_y > 0) dy = 2;
       else dy = -2;}
     if (abs(joystick_y) > 0.70){
-      if (joystick_y > 0) dy = 3;
-      else dy = -3;}
+      if (joystick_y > 0) dy = 4;
+      else dy = -4;}
+
     ARM_shift_by(dx, dy); 
     //sendMessage(TOPIC_OUT, "Brazo controlado");
   } 
