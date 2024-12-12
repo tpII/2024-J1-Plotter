@@ -292,6 +292,9 @@ function setupGamepad() {
 }
 
 // Manejar las entradas del joystick
+let buttonAPressed = false; // Estado del botón A (B0)
+let buttonBPressed = false; // Estado del botón B (B1)
+
 function handleGamepadInput(gp) {
   // Botón B9 (Menu) - Cambiar al modo joystick
   if (gp.buttons[9].pressed && !joystickMode) {
@@ -302,13 +305,22 @@ function handleGamepadInput(gp) {
 
   // Si está en modo joystick
   if (joystickMode) {
-    // Botón A (B0) - Enviar VERTDOWN y VERTUP
-    if (gp.buttons[0].pressed) {
+    // Botón A (B0) - Enviar VERTDOWN solo una vez al presionar
+    if (gp.buttons[0].pressed && !buttonAPressed) {
       sendCommand("VERTDOWN", "");
       console.log("VERTDOWN");
+      buttonAPressed = true;
     } else if (!gp.buttons[0].pressed) {
+      buttonAPressed = false; // Reinicia el estado
+    }
+
+    // Botón B (B1) - Enviar VERTUP solo una vez al presionar
+    if (gp.buttons[1].pressed && !buttonBPressed) {
       sendCommand("VERTUP", "");
       console.log("VERTUP");
+      buttonBPressed = true;
+    } else if (!gp.buttons[1].pressed) {
+      buttonBPressed = false; // Reinicia el estado
     }
 
     // Joystick principal (stick izquierdo) - Enviar MOVE
@@ -326,3 +338,4 @@ function handleGamepadInput(gp) {
     }
   }
 }
+
