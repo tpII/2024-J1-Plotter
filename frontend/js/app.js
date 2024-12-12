@@ -16,14 +16,14 @@ const cognitoLogoutUrl = "https://plotter.auth.us-east-1.amazoncognito.com/logou
 let idToken = null;
 
 // Rango de normalización
-const X_RANGE = [0, 110];
 const Y_RANGE = [0, 140];
+const X_RANGE = [0, 110];
 
 // Modo de desarrollo
 const isDevelopment = false;
 
 // Normaliza las coordenadas al rango especificado
-function normalizeCoordinates(x, y) {
+function normalizeCoordinates(y, x) {
   const normalizedX = Math.round((x / canvas.width) * (X_RANGE[1] - X_RANGE[0]) + X_RANGE[0]);
   const normalizedY = Math.round((y / canvas.height) * (Y_RANGE[1] - Y_RANGE[0]) + Y_RANGE[0]);
   return [normalizedX, normalizedY];
