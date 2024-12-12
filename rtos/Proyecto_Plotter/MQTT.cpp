@@ -215,6 +215,7 @@ static void process_stroke(JsonVariant data)
 {
   int error_code = 0;
   int startX, startY, endX, endY;
+  float startX_aux, startY_aux, endX_aux, endY_aux;
 
   JsonObject obj = data.as<JsonObject>(); 
   JsonArray x = obj["x"];
@@ -231,11 +232,23 @@ static void process_stroke(JsonVariant data)
   }
 
   // Guarda las lineas entre cada par de puntos
-  for (size_t i = 0; i < x.size() - 1; i++) {
-    startX = x[i];
-    startY = y[i];
-    endX = x[i + 1];
-    endY = y[i + 1];
+  for (size_t i = 0; i < x.size() - 1; i++) 
+  {
+    startX_aux = x[i];
+    startY_aux = y[i];
+    endX_aux = x[i + 1];
+    endY_aux = y[i + 1];
+    
+    /* Invertido
+    startX = RANGE_X - (int)(startY_aux * RANGE_X);
+    startY = RANGE_Y - (int)(startX_aux * RANGE_Y);
+    endX = RANGE_X - (int)(endY_aux * RANGE_X);
+    endY = RANGE_Y - (int)(endX_aux * RANGE_Y);*/
+
+    startX = (int)(startY_aux * RANGE_X);
+    startY = (int)(startX_aux * RANGE_Y);
+    endX = (int)(endY_aux * RANGE_X);
+    endY = (int)(endX_aux * RANGE_Y);
 
     error_code = DRAWING_MODULE_add_line(startX, startY, endX, endY);
 
