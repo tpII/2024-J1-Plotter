@@ -13,7 +13,7 @@
 #define SERVO_BETA_PIN 19
 #define SERVO_VERTICAL_PIN 23
 
-#define LIFT_DELAY 40 //Ciclos de FMS que espera el brazo al subir/bajar antes de volver a moverse
+#define LIFT_DELAY 30 //Ciclos de FMS que espera el brazo al subir/bajar antes de volver a moverse
 #define LIFT_ANGLE_UP 140 //Angulo que debe moverse el servo vertical
 #define LIFT_ANGLE_DOWN 0 //Angulo que debe moverse el servo vertical
 

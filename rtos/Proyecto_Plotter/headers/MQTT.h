@@ -11,6 +11,8 @@
 #include "premade_drawings.h"
 
 // WiFi 
+static const char* ssid = "Plotter";
+static const char* password = "123456789";
 
 // MQTT Broker (AWS IoT Core)
 #define ADDRESS "a8qpa2kd8arw9-ats.iot.us-east-1.amazonaws.com"  

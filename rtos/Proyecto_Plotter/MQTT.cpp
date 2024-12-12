@@ -143,14 +143,31 @@ static void processCommand(const char* command, JsonVariant data)
   }
   else if (strcmp(command, "MANUAL_ON") == 0)
   {
+    DRAWING_MODULE_stop();
+    DRAWING_MODULE_reset(); 
     manual_mode = true;
-    sendMessage(TOPIC_OUT, "Modo manual activado");
+    sendMessage(TOPIC_OUT, "Modo Manual Activado");
   } 
   else if (strcmp(command, "MANUAL_OFF") == 0)
   {
     manual_mode = false;
     sendMessage(TOPIC_OUT, "Modo manual desactivado");
   } 
+  else if (strcmp(command, "MODESWITCH") == 0)
+  {
+    if (manual_mode)
+    {
+      manual_mode = false;
+      sendMessage(TOPIC_OUT, "Modo Manual Desactivado");
+    }
+    else
+    {
+      DRAWING_MODULE_stop();
+      DRAWING_MODULE_reset(); 
+      manual_mode = true;
+      sendMessage(TOPIC_OUT, "Modo Manual Activado");
+    }
+  }
   else if (strcmp(command, "VERTUP") == 0)
   {
     ARM_lift(true);
@@ -166,14 +183,6 @@ static void processCommand(const char* command, JsonVariant data)
     ARM_lift(!ARM_is_lifted());
     sendMessage(TOPIC_OUT, "Toggled");
   }
-  else if (strcmp(command, "MOVE") == 0)
-  {
-    int dx = data["dx"].as<int>();  
-    int dy = data["dy"].as<int>();  
-
-    ARM_shift_by(dx, dy); 
-    sendMessage(TOPIC_OUT, "Brazo controlado");
-  } 
   else if (strcmp(command, "PING") == 0)
   {
     ping_timer = PING_CYCLES;
@@ -185,6 +194,38 @@ static void processCommand(const char* command, JsonVariant data)
     ARM_lift(true);
     ARM_standby_position();
     sendMessage(TOPIC_OUT, "Standby - Posicion inicial");
+  } 
+
+  // Control por Joystick Interfaz Web
+  else if (strcmp(command, "MOVE") == 0)
+  {
+    float joystick_x = data["dx"].as<float>();
+    float joystick_y = data["dy"].as<float>();  
+    int dx, dy;
+
+    //Eje X del joystick
+    if (abs(joystick_x) > 0.30){ 
+      if (joystick_x > 0) dx = 1;
+      else dx = -1;}
+    if (abs(joystick_x) > 0.50){ 
+      if (joystick_x > 0) dx = 2;
+      else dx = -2;}
+    if (abs(joystick_x) > 0.70){
+      if (joystick_x > 0) dx = 3;
+      else dx = -3;}
+
+    //Eje Y del joystick
+    if (abs(joystick_y) > 0.30){ 
+      if (joystick_y > 0) dy = 1;
+      else dy = -1;}
+    if (abs(joystick_y) > 0.50){ 
+      if (joystick_y > 0) dy = 2;
+      else dy = -2;}
+    if (abs(joystick_y) > 0.70){
+      if (joystick_y > 0) dy = 3;
+      else dy = -3;}
+    ARM_shift_by(dx, dy); 
+    //sendMessage(TOPIC_OUT, "Brazo controlado");
   } 
 
   //Dibujos prearmados
