@@ -8,6 +8,7 @@
 
 #include "arm_controller.h"
 #include "drawing_module.h"
+#include "premade_drawings.h"
 
 // WiFi 
 
@@ -21,8 +22,10 @@
 #define TOPIC_OUT "robot/feedback"
 
 //Campos JSON de los mensajes enviados/recibidos
-#define CAMPO_COMANDO "command" 
-#define CAMPO_LINEA "line" 
+#define COMMAND_FIELD "command" 
+#define DATA_FIELD "data" 
+
+#define PING_CYCLES 100 //10 segundos
 
 // Claves MQTT
 // Certificado CA1
@@ -103,5 +106,6 @@ void MQTT_init();
 void MQTT_update();
 
 bool MQTT_is_manual_mode(); //Devuelve "true" si el modo de dibujo manual se encuentra activado
+bool MQTT_ping_status(); //Devuelve "true" si el timer del ping es mayor a 0
 
 #endif

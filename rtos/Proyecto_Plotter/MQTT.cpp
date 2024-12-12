@@ -107,11 +107,11 @@ static void messageArrived(char* topic, byte* payload, unsigned int length)
     return;
   }
 
-  if (doc.containsKey(COMMAND_FIELD))
+  if (doc.containsKey(COMMAND_FIELD) && doc.containsKey(DATA_FIELD))
   {
     // Extrae los datos de "command" y "data" del JSON
-    const char* command = doc["command"];
-    JsonVariant data = doc["data"];
+    const char* command = doc[COMMAND_FIELD];
+    JsonVariant data = doc[DATA_FIELD];
     processCommand(command, data);
   }
   else
@@ -230,7 +230,7 @@ static void process_stroke(JsonVariant data)
     return;
   }
 
-  // Draw lines between consecutive points
+  // Guarda las lineas entre cada par de puntos
   for (size_t i = 0; i < x.size() - 1; i++) {
     startX = x[i];
     startY = y[i];
@@ -245,7 +245,6 @@ static void process_stroke(JsonVariant data)
 
   sendMessage(TOPIC_OUT, "Linea Procesada");
 }
-
 
 static void sendMessage(const char* topic, const char* field, const char* messageContent)
 {
